@@ -31,7 +31,6 @@ class ProductState extends ChangeNotifier {
   bool get hasSelection => _selected.isNotEmpty;
   bool get saving => _saving;
 
-
   void _notify() {
     if (!_disposed) notifyListeners();
   }
@@ -50,8 +49,10 @@ class ProductState extends ChangeNotifier {
       _result = result;
 
       _query = query.copyWith(page: result.page);
-      final activeIds = result.items.where((item) => !item.isDeleted)
-          .map((item) => item.id).toSet();
+      final activeIds = result.items
+          .where((item) => !item.isDeleted)
+          .map((item) => item.id)
+          .toSet();
       _selected.removeWhere((id) => !activeIds.contains(id));
       _status = result.items.isEmpty ? LoadStatus.empty : LoadStatus.success;
     } catch (error) {
@@ -82,8 +83,9 @@ class ProductState extends ChangeNotifier {
     if (_disposed || _saving || _status != LoadStatus.success) return;
     _selected.clear();
     if (selected) {
-      _selected.addAll(_result.items.where((item) => !item.isDeleted)
-          .map((item) => item.id));
+      _selected.addAll(
+        _result.items.where((item) => !item.isDeleted).map((item) => item.id),
+      );
     }
     _notify();
   }
@@ -100,7 +102,24 @@ class ProductState extends ChangeNotifier {
     _notify();
   }
 
+  String platformName(int id) => _repository.platformName(id);
+
   Future<Product?> findById(int id) => _repository.findById(id);
+
+  Future<List<Product>> findOptions() async {
+    final items = <Product>[];
+    var page = 1;
+    while (true) {
+      final result = await _repository.find(Query(page: page, size: 50));
+      items.addAll(result.items);
+      if (!result.hasNext) { break; }
+      page = result.page + 1;
+    }
+    return List.unmodifiable(items);
+  }
+
+
+  Future<bool> skuExists(String sku, {int? exceptId}) => _repository.skuExists(sku, exceptId: exceptId);
 
   Future<bool> _change(Future<void> Function() action) async {
     if (_disposed || _saving) return false;

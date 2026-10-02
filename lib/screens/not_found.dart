@@ -17,7 +17,10 @@ class NotFound extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Адрес не существует: $location', textAlign: TextAlign.center),
+              Text(
+                'Адрес не существует: $location',
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => context.go('/products'),

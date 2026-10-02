@@ -1,3 +1,7 @@
+import 'package:provider/provider.dart';
+
+import '../state/storage_state.dart';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +13,7 @@ class ShopPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final storage = context.watch<StorageState>();
     final path = GoRouterState.of(context).uri.path;
     return Scaffold(
       appBar: AppBar(
@@ -24,6 +29,16 @@ class ShopPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (storage.message != null)
+                    MaterialBanner(
+                      content: Text(storage.message!),
+                      actions: [
+                        TextButton(
+                          onPressed: storage.dismiss,
+                          child: const Text('Понятно'),
+                        ),
+                      ],
+                    ),
                   Wrap(
                     spacing: 12,
                     runSpacing: 8,
@@ -46,6 +61,20 @@ class ShopPage extends StatelessWidget {
                         ),
                         child: const Text('Бренды'),
                       ),
+                      for (final entry in {
+                        '/categories': 'Категории',
+                        '/platforms': 'Платформы',
+                        '/users': 'Пользователи',
+                      }.entries)
+                        TextButton(
+                          onPressed: () => context.go(entry.key),
+                          style: TextButton.styleFrom(
+                            backgroundColor: path.startsWith(entry.key)
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : null,
+                          ),
+                          child: Text(entry.value),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 16),

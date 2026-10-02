@@ -48,9 +48,11 @@ class Pagination extends StatelessWidget {
                 DropdownMenuItem(value: 25, child: Text('25')),
                 DropdownMenuItem(value: 50, child: Text('50')),
               ],
-              onChanged: !enabled ? null : (value) {
-                if (value != null && value != size) onSizeChanged(value);
-              },
+              onChanged: !enabled
+                  ? null
+                  : (value) {
+                      if (value != null && value != size) onSizeChanged(value);
+                    },
             ),
           ),
           TextButton(

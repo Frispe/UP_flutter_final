@@ -1,19 +1,19 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/brand.dart';
+import '../models/user.dart';
 import '../models/page_result.dart';
 import '../models/query.dart';
-import '../repositories/brand_repository.dart';
+import '../repositories/user_repository.dart';
 import 'status.dart';
 
-class BrandState extends ChangeNotifier {
-  BrandState(this._repository);
+class UserState extends ChangeNotifier {
+  UserState(this._repository);
 
-  final BrandRepository _repository;
+  final UserRepository _repository;
 
   Map<int, int> _counts = {};
   Query _query = const Query();
-  PageResult<Brand> _result = PageResult.empty();
+  PageResult<User> _result = PageResult.empty();
   LoadStatus _status = LoadStatus.idle;
   String? _error;
   String? _actionError;
@@ -23,7 +23,7 @@ class BrandState extends ChangeNotifier {
   int _request = 0;
 
   Query get query => _query;
-  PageResult<Brand> get result => _result;
+  PageResult<User> get result => _result;
   LoadStatus get status => _status;
   String? get error => _error;
   String? get actionError => _actionError;
@@ -38,7 +38,9 @@ class BrandState extends ChangeNotifier {
   }
 
   Future<void> load() async {
-    if (_disposed) return;
+    if (_disposed) {
+      return;
+    }
     final request = ++_request;
     final query = _query;
     _status = LoadStatus.loading;
@@ -47,7 +49,9 @@ class BrandState extends ChangeNotifier {
     try {
       final result = await _repository.find(query);
       final counts = await _repository.productCounts();
-      if (_disposed || request != _request) return;
+      if (_disposed || request != _request) {
+        return;
+      }
       _result = result;
       _counts = counts;
       _query = query.copyWith(page: result.page);
@@ -58,7 +62,9 @@ class BrandState extends ChangeNotifier {
       _selected.removeWhere((id) => !activeIds.contains(id));
       _status = result.items.isEmpty ? LoadStatus.empty : LoadStatus.success;
     } catch (error) {
-      if (_disposed || request != _request) return;
+      if (_disposed || request != _request) {
+        return;
+      }
       _status = LoadStatus.error;
       _error = errorText(error);
       _selected.clear();
@@ -67,7 +73,9 @@ class BrandState extends ChangeNotifier {
   }
 
   Future<void> applyQuery(Query query) async {
-    if (_disposed) return;
+    if (_disposed) {
+      return;
+    }
     _query = query;
     _selected.clear();
     _actionError = null;
@@ -75,14 +83,20 @@ class BrandState extends ChangeNotifier {
   }
 
   void toggleSelection(int id) {
-    if (_disposed || _saving || _status != LoadStatus.success) return;
-    if (!_result.items.any((item) => item.id == id && !item.isDeleted)) return;
+    if (_disposed || _saving || _status != LoadStatus.success) {
+      return;
+    }
+    if (!_result.items.any((item) => item.id == id && !item.isDeleted)) {
+      return;
+    }
     if (!_selected.add(id)) _selected.remove(id);
     _notify();
   }
 
   void selectAll(bool selected) {
-    if (_disposed || _saving || _status != LoadStatus.success) return;
+    if (_disposed || _saving || _status != LoadStatus.success) {
+      return;
+    }
     _selected.clear();
     if (selected) {
       _selected.addAll(
@@ -93,40 +107,52 @@ class BrandState extends ChangeNotifier {
   }
 
   void clearSelection() {
-    if (_disposed || _saving) return;
+    if (_disposed || _saving) {
+      return;
+    }
     _selected.clear();
     _notify();
   }
 
   void clearActionError() {
-    if (_disposed) return;
+    if (_disposed) {
+      return;
+    }
     _actionError = null;
     _notify();
   }
 
-  Future<Brand?> findById(int id) => _repository.findById(id);
+  Future<User?> findById(int id) => _repository.findById(id);
 
-  Future<List<Brand>> findOptions({bool includeDeleted = false}) async {
-    final brands = <Brand>[];
+  Future<bool> emailExists(String email, {int? exceptId}) => _repository.emailExists(email, exceptId: exceptId);
+
+  Future<List<User>> findOptions({bool includeDeleted = false}) async {
+    final users = <User>[];
     var page = 1;
     while (true) {
       final result = await _repository.find(Query(page: page, size: 50, includeDeleted: includeDeleted));
-      brands.addAll(result.items);
-      if (!result.hasNext) break;
+      users.addAll(result.items);
+      if (!result.hasNext) {
+        break;
+      }
       page = result.page + 1;
     }
-    return List.unmodifiable(brands);
+    return List.unmodifiable(users);
   }
 
   Future<bool> _change(Future<void> Function() action) async {
-    if (_disposed || _saving) return false;
+    if (_disposed || _saving) {
+      return false;
+    }
     _saving = true;
     _actionError = null;
     ++_request;
     _notify();
     try {
       await action();
-      if (_disposed) return false;
+      if (_disposed) {
+        return false;
+      }
       _selected.clear();
       await load();
 
@@ -141,11 +167,11 @@ class BrandState extends ChangeNotifier {
     }
   }
 
-  Future<bool> create(Brand item) => _change(() async {
+  Future<bool> create(User item) => _change(() async {
     await _repository.create(item);
   });
 
-  Future<bool> update(Brand item) => _change(() async {
+  Future<bool> update(User item) => _change(() async {
     await _repository.update(item);
   });
 
@@ -156,7 +182,9 @@ class BrandState extends ChangeNotifier {
   Future<bool> restore(int id) => _change(() => _repository.restore(id));
 
   Future<bool> deleteSelected() async {
-    if (_selected.isEmpty) return false;
+    if (_selected.isEmpty) {
+      return false;
+    }
     final ids = _selected.toList();
     return _change(() async {
       await _repository.deleteMany(ids);

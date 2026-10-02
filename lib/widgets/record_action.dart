@@ -34,9 +34,15 @@ Future<void> changeRecord(
   if (GoRouterState.of(context).uri != uri) return;
   final success = await action();
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: Text(success ? 'Операция выполнена' : actionError() ?? 'Не удалось выполнить операцию'),
-  ));
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        success
+            ? 'Операция выполнена'
+            : actionError() ?? 'Не удалось выполнить операцию',
+      ),
+    ),
+  );
   if (success && GoRouterState.of(context).uri == uri) {
     final query = currentQuery();
     final oldPage = int.tryParse(uri.queryParameters['page'] ?? '1');

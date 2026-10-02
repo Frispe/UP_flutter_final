@@ -58,9 +58,15 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
   }
 
   Widget _cards(BuildContext context) {
-    final selectable = widget.items.where((item) => widget.canSelect?.call(item) ?? true).toList();
-    final selectedCount = selectable.where((item) => widget.selected.contains(widget.idOf(item))).length;
-    final sortColumns = widget.columns.where((column) => column.sortField != null).toList();
+    final selectable = widget.items
+        .where((item) => widget.canSelect?.call(item) ?? true)
+        .toList();
+    final selectedCount = selectable
+        .where((item) => widget.selected.contains(widget.idOf(item)))
+        .length;
+    final sortColumns = widget.columns
+        .where((column) => column.sortField != null)
+        .toList();
     return ListView(
       key: const PageStorageKey('cards'),
       padding: const EdgeInsets.only(bottom: 12),
@@ -76,17 +82,28 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
             ),
             items: [
               for (final column in sortColumns)
-                DropdownMenuItem(value: column.sortField, child: Text(column.label)),
+                DropdownMenuItem(
+                  value: column.sortField,
+                  child: Text(column.label),
+                ),
             ],
-            onChanged: widget.onSort == null ? null : (value) {
-              if (value != null) widget.onSort!(value, widget.sortAscending);
-            },
+            onChanged: widget.onSort == null
+                ? null
+                : (value) {
+                    if (value != null) {
+                      widget.onSort!(value, widget.sortAscending);
+                    }
+                  },
           ),
           TextButton(
-            onPressed: widget.onSort == null || widget.sortField == null ? null : () {
-              widget.onSort!(widget.sortField!, !widget.sortAscending);
-            },
-            child: Text(widget.sortAscending ? 'По возрастанию ↑' : 'По убыванию ↓'),
+            onPressed: widget.onSort == null || widget.sortField == null
+                ? null
+                : () {
+                    widget.onSort!(widget.sortField!, !widget.sortAscending);
+                  },
+            child: Text(
+              widget.sortAscending ? 'По возрастанию ↑' : 'По убыванию ↓',
+            ),
           ),
         ],
         CheckboxListTile(
@@ -94,16 +111,22 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
           controlAffinity: ListTileControlAffinity.leading,
           title: const Text('Выбрать все на странице'),
           tristate: true,
-          value: selectedCount == 0 ? false : selectedCount == selectable.length ? true : null,
+          value: selectedCount == 0
+              ? false
+              : selectedCount == selectable.length
+              ? true
+              : null,
           onChanged: widget.onSelectAll == null || selectable.isEmpty
-              ? null : (_) => widget.onSelectAll!(selectedCount != selectable.length),
+              ? null
+              : (_) => widget.onSelectAll!(selectedCount != selectable.length),
         ),
         for (final item in widget.items)
           Card(
             key: ValueKey(widget.idOf(item)),
             margin: const EdgeInsets.only(bottom: 12),
             color: widget.selected.contains(widget.idOf(item))
-                ? Theme.of(context).colorScheme.secondaryContainer : null,
+                ? Theme.of(context).colorScheme.secondaryContainer
+                : null,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -114,8 +137,11 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
                     controlAffinity: ListTileControlAffinity.leading,
                     title: Text('Запись № ${widget.idOf(item)}'),
                     value: widget.selected.contains(widget.idOf(item)),
-                    onChanged: widget.onToggleSelect == null || !(widget.canSelect?.call(item) ?? true)
-                        ? null : (_) => widget.onToggleSelect!(widget.idOf(item)),
+                    onChanged:
+                        widget.onToggleSelect == null ||
+                            !(widget.canSelect?.call(item) ?? true)
+                        ? null
+                        : (_) => widget.onToggleSelect!(widget.idOf(item)),
                   ),
                   for (final column in widget.columns)
                     Padding(
@@ -123,14 +149,21 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(column.label, style: Theme.of(context).textTheme.labelMedium),
+                          Text(
+                            column.label,
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
                           const SizedBox(height: 2),
                           column.build(item),
                         ],
                       ),
                     ),
                   if (widget.actions != null)
-                    Wrap(spacing: 8, runSpacing: 8, children: widget.actions!(item)),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: widget.actions!(item),
+                    ),
                 ],
               ),
             ),
@@ -143,7 +176,9 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
   Widget build(BuildContext context) {
     final sortIndex = widget.sortField == null
         ? -1
-        : widget.columns.indexWhere((column) => column.sortField == widget.sortField);
+        : widget.columns.indexWhere(
+            (column) => column.sortField == widget.sortField,
+          );
     return LayoutBuilder(
       builder: (context, constraints) {
         if (MediaQuery.sizeOf(context).width < 600) return _cards(context);
@@ -176,10 +211,13 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
                         DataColumn(
                           label: Text(column.label),
                           numeric: column.numeric,
-                          onSort: column.sortField == null || widget.onSort == null
+                          onSort:
+                              column.sortField == null || widget.onSort == null
                               ? null
-                              : (index, ascending) =>
-                                  widget.onSort!(column.sortField!, ascending),
+                              : (index, ascending) => widget.onSort!(
+                                  column.sortField!,
+                                  ascending,
+                                ),
                         ),
                       if (widget.actions != null)
                         const DataColumn(label: Text('Действия')),
@@ -189,18 +227,22 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
                         DataRow(
                           key: ValueKey(widget.idOf(item)),
                           selected: widget.selected.contains(widget.idOf(item)),
-                          onSelectChanged: widget.onToggleSelect == null ||
+                          onSelectChanged:
+                              widget.onToggleSelect == null ||
                                   !(widget.canSelect?.call(item) ?? true)
                               ? null
-                              : (value) => widget.onToggleSelect!(widget.idOf(item)),
+                              : (value) =>
+                                    widget.onToggleSelect!(widget.idOf(item)),
                           cells: [
                             for (final column in widget.columns)
                               DataCell(column.build(item)),
                             if (widget.actions != null)
-                              DataCell(Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: widget.actions!(item),
-                              )),
+                              DataCell(
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: widget.actions!(item),
+                                ),
+                              ),
                           ],
                         ),
                     ],

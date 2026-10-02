@@ -1,32 +1,22 @@
 import 'json.dart';
 
-class Brand {
-  const Brand({
-    required this.id,
-    required this.name,
-    this.deletedAt,
-    this.platformIds = const [],
-  });
+class Category {
+  const Category({required this.id, required this.name, this.deletedAt});
 
   final int id;
   final String name;
-  final List<int> platformIds;
   final DateTime? deletedAt;
 
   bool get isDeleted => deletedAt != null;
 
-  Brand copyWith({
+  Category copyWith({
     String? name,
-    List<int>? platformIds,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
   }) {
-    return Brand(
+    return Category(
       id: id,
       name: name ?? this.name,
-      platformIds: platformIds == null
-          ? this.platformIds
-          : List.unmodifiable(platformIds),
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     );
   }
@@ -34,15 +24,13 @@ class Brand {
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
-    'platformIds': List<int>.of(platformIds),
     'deletedAt': deletedAt?.toIso8601String(),
   };
 
-  factory Brand.fromJson(Map<String, dynamic> json) {
-    return Brand(
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
       id: readInt(json['id']),
       name: readString(json['name']),
-      platformIds: readIds(json['platformIds']),
       deletedAt: readDate(json['deletedAt']),
     );
   }

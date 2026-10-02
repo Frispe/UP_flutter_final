@@ -2,7 +2,9 @@ import 'models/product.dart';
 import 'models/query.dart';
 
 int? _number(Map<String, String> values, String name, {int minimum = 0}) {
-  if (!values.containsKey(name)) return null;
+  if (!values.containsKey(name)) {
+    return null;
+  }
   final number = int.tryParse(values[name]!);
   if (number == null || number < minimum || number > 9007199254740991) {
     throw FormatException('Некорректный параметр $name');
@@ -11,7 +13,9 @@ int? _number(Map<String, String> values, String name, {int minimum = 0}) {
 }
 
 int? _price(Map<String, String> values, String name) {
-  if (!values.containsKey(name)) return null;
+  if (!values.containsKey(name)) {
+    return null;
+  }
   final text = values[name]!.replaceAll(',', '.');
   if (!RegExp(r'^\d{1,12}(\.\d{1,2})?$').hasMatch(text)) {
     throw FormatException('Некорректная цена в параметре $name');
@@ -23,9 +27,12 @@ int? _price(Map<String, String> values, String name) {
 
 Query readQuery(Uri uri, {required bool brands}) {
   final values = uri.queryParameters;
-  final fields = brands ? ['name', 'id', 'productCount'] : ['name', 'sku', 'price'];
+  final fields = uri.path.startsWith('/users') ? ['name', 'id', 'email', 'nickname'] : brands
+      ? ['name', 'id', 'productCount']
+      : ['name', 'sku', 'price'];
   final sort = (values['sort'] ?? 'name,asc').split(',');
-  if (sort.length != 2 || !fields.contains(sort[0]) ||
+  if (sort.length != 2 ||
+      !fields.contains(sort[0]) ||
       !['asc', 'desc'].contains(sort[1])) {
     throw const FormatException('Некорректные параметры сортировки');
   }
@@ -42,14 +49,24 @@ Query readQuery(Uri uri, {required bool brands}) {
     for (final value in ProductType.values) {
       if (value.name == values['type']) type = value;
     }
-    if (type == null) throw const FormatException('Неизвестный тип товара');
+    if (type == null) {
+      throw const FormatException('Неизвестный тип товара');
+    }
   }
   final priceFrom = brands ? null : _price(values, 'priceFrom');
   final priceTo = brands ? null : _price(values, 'priceTo');
   if (priceFrom != null && priceTo != null && priceFrom > priceTo) {
     throw const FormatException('Цена от не должна превышать цену до');
   }
+  bool? optionalBool(String name) {
+    final value = values[name];
+    if (value == null) { return null; }
+    if (value != 'true' && value != 'false') { throw FormatException('Некорректный параметр $name'); }
+    return value == 'true';
+  }
   return Query(
+    hasProducts: brands && !uri.path.startsWith('/users') ? optionalBool('hasProducts') : null,
+    hasCartItems: uri.path.startsWith('/users') ? optionalBool('hasCartItems') : null,
     search: values['search'] ?? '',
     type: type,
     brandId: brands ? null : _number(values, 'brandId', minimum: 1),
@@ -64,17 +81,21 @@ Query readQuery(Uri uri, {required bool brands}) {
 }
 
 String queryUrl(String path, Query query) {
-  String price(int value) => '${value ~/ 100}.${(value % 100).toString().padLeft(2, '0')}';
-  final brands = path.startsWith('/brands');
+  String price(int value) =>
+      '${value ~/ 100}.${(value % 100).toString().padLeft(2, '0')}';
+  final brands = !path.startsWith('/products');
   return Uri(
     path: path,
     queryParameters: {
       if (query.search.isNotEmpty) 'search': query.search,
       if (!brands && query.type != null) 'type': query.type!.name,
       if (!brands && query.brandId != null) 'brandId': '${query.brandId}',
-      if (!brands && query.priceFrom != null) 'priceFrom': price(query.priceFrom!),
+      if (!brands && query.priceFrom != null)
+        'priceFrom': price(query.priceFrom!),
       if (!brands && query.priceTo != null) 'priceTo': price(query.priceTo!),
       'sort': '${query.sortField},${query.sortAscending ? 'asc' : 'desc'}',
+      if (brands && !path.startsWith('/users') && query.hasProducts != null) 'hasProducts': '${query.hasProducts}',
+      if (path.startsWith('/users') && query.hasCartItems != null) 'hasCartItems': '${query.hasCartItems}',
       'page': '${query.page}',
       'size': '${query.size}',
       if (query.includeDeleted) 'includeDeleted': 'true',

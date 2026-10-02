@@ -30,7 +30,9 @@ class _ProductFiltersState extends State<ProductFilters> {
   int _searchVersion = 0;
 
   String _priceText(int? value) {
-    return value == null ? '' : '${value ~/ 100}.${(value % 100).toString().padLeft(2, '0')}';
+    return value == null
+        ? ''
+        : '${value ~/ 100}.${(value % 100).toString().padLeft(2, '0')}';
   }
 
   int? _parsePrice(String value) {
@@ -38,7 +40,9 @@ class _ProductFiltersState extends State<ProductFilters> {
     if (!RegExp(r'^\d{1,12}(\.\d{1,2})?$').hasMatch(text)) return null;
     final parts = text.split('.');
     final rubles = int.parse(parts[0]);
-    final kopecks = parts.length == 1 ? 0 : int.parse(parts[1].padRight(2, '0'));
+    final kopecks = parts.length == 1
+        ? 0
+        : int.parse(parts[1].padRight(2, '0'));
     return rubles * 100 + kopecks;
   }
 
@@ -70,12 +74,14 @@ class _ProductFiltersState extends State<ProductFilters> {
 
   void _applyPrices() {
     if (!_formKey.currentState!.validate()) return;
-    widget.onChanged(widget.query.copyWith(
-      priceFrom: _parsePrice(_from.text),
-      clearPriceFrom: _from.text.trim().isEmpty,
-      priceTo: _parsePrice(_to.text),
-      clearPriceTo: _to.text.trim().isEmpty,
-    ));
+    widget.onChanged(
+      widget.query.copyWith(
+        priceFrom: _parsePrice(_from.text),
+        clearPriceFrom: _from.text.trim().isEmpty,
+        priceTo: _parsePrice(_to.text),
+        clearPriceTo: _to.text.trim().isEmpty,
+      ),
+    );
   }
 
   void _reset() {
@@ -85,13 +91,15 @@ class _ProductFiltersState extends State<ProductFilters> {
       _to.clear();
     });
     _formKey.currentState!.validate();
-    widget.onChanged(widget.query.copyWith(
-      search: '',
-      clearType: true,
-      clearBrand: true,
-      clearPriceFrom: true,
-      clearPriceTo: true,
-    ));
+    widget.onChanged(
+      widget.query.copyWith(
+        search: '',
+        clearType: true,
+        clearBrand: true,
+        clearPriceFrom: true,
+        clearPriceTo: true,
+      ),
+    );
   }
 
   @override
@@ -116,9 +124,8 @@ class _ProductFiltersState extends State<ProductFilters> {
                 key: ValueKey(_searchVersion),
                 value: widget.query.search,
                 label: 'Поиск по названию или артикулу',
-                onChanged: (value) => widget.onChanged(
-                  widget.query.copyWith(search: value),
-                ),
+                onChanged: (value) =>
+                    widget.onChanged(widget.query.copyWith(search: value)),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -132,18 +139,32 @@ class _ProductFiltersState extends State<ProductFilters> {
                       initialValue: widget.query.type?.name ?? '',
                       isExpanded: true,
                       decoration: const InputDecoration(
-                        labelText: 'Тип товара', border: OutlineInputBorder(),
+                        labelText: 'Тип товара',
+                        border: OutlineInputBorder(),
                       ),
                       items: [
-                        const DropdownMenuItem(value: '', child: Text('Все типы')),
+                        const DropdownMenuItem(
+                          value: '',
+                          child: Text('Все типы'),
+                        ),
                         for (final type in ProductType.values)
-                          DropdownMenuItem(value: type.name, child: Text(productTypeName(type))),
+                          DropdownMenuItem(
+                            value: type.name,
+                            child: Text(productTypeName(type)),
+                          ),
                       ],
                       onChanged: (value) {
                         final type = value == null || value.isEmpty
                             ? null
-                            : ProductType.values.firstWhere((type) => type.name == value);
-                        widget.onChanged(widget.query.copyWith(type: type, clearType: type == null));
+                            : ProductType.values.firstWhere(
+                                (type) => type.name == value,
+                              );
+                        widget.onChanged(
+                          widget.query.copyWith(
+                            type: type,
+                            clearType: type == null,
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -155,9 +176,13 @@ class _ProductFiltersState extends State<ProductFilters> {
                         if (snapshot.hasError) {
                           return TextButton(
                             onPressed: () => setState(() {
-                              _brands = context.read<BrandState>().findOptions();
+                              _brands = context
+                                  .read<BrandState>()
+                                  .findOptions();
                             }),
-                            child: const Text('Не удалось загрузить бренды. Повторить'),
+                            child: const Text(
+                              'Не удалось загрузить бренды. Повторить',
+                            ),
                           );
                         }
                         final brands = snapshot.data ?? const <Brand>[];
@@ -167,22 +192,38 @@ class _ProductFiltersState extends State<ProductFilters> {
                           initialValue: selected ?? 0,
                           isExpanded: true,
                           decoration: InputDecoration(
-                            labelText: snapshot.hasData ? 'Бренд' : 'Загрузка брендов…',
+                            labelText: snapshot.hasData
+                                ? 'Бренд'
+                                : 'Загрузка брендов…',
                             border: const OutlineInputBorder(),
                           ),
                           items: [
-                            const DropdownMenuItem(value: 0, child: Text('Все бренды')),
+                            const DropdownMenuItem(
+                              value: 0,
+                              child: Text('Все бренды'),
+                            ),
                             for (final brand in brands)
-                              DropdownMenuItem(value: brand.id, child: Text(brand.name)),
-                            if (selected != null && !brands.any((brand) => brand.id == selected))
-                              DropdownMenuItem(value: selected, child: Text('Бренд № $selected')),
+                              DropdownMenuItem(
+                                value: brand.id,
+                                child: Text(brand.name),
+                              ),
+                            if (selected != null &&
+                                !brands.any((brand) => brand.id == selected))
+                              DropdownMenuItem(
+                                value: selected,
+                                child: Text('Бренд № $selected'),
+                              ),
                           ],
-                          onChanged: !snapshot.hasData ? null : (value) {
-                            widget.onChanged(widget.query.copyWith(
-                              brandId: value,
-                              clearBrand: value == null || value == 0,
-                            ));
-                          },
+                          onChanged: !snapshot.hasData
+                              ? null
+                              : (value) {
+                                  widget.onChanged(
+                                    widget.query.copyWith(
+                                      brandId: value,
+                                      clearBrand: value == null || value == 0,
+                                    ),
+                                  );
+                                },
                         );
                       },
                     ),
@@ -191,9 +232,13 @@ class _ProductFiltersState extends State<ProductFilters> {
                     width: fieldWidth,
                     child: TextFormField(
                       controller: _from,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: const InputDecoration(
-                        labelText: 'Цена от, ₽', border: OutlineInputBorder(), errorMaxLines: 3,
+                        labelText: 'Цена от, ₽',
+                        border: OutlineInputBorder(),
+                        errorMaxLines: 3,
                       ),
                       validator: _validatePrice,
                       onFieldSubmitted: (_) => _applyPrices(),
@@ -203,9 +248,13 @@ class _ProductFiltersState extends State<ProductFilters> {
                     width: fieldWidth,
                     child: TextFormField(
                       controller: _to,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: const InputDecoration(
-                        labelText: 'Цена до, ₽', border: OutlineInputBorder(), errorMaxLines: 3,
+                        labelText: 'Цена до, ₽',
+                        border: OutlineInputBorder(),
+                        errorMaxLines: 3,
                       ),
                       validator: (value) {
                         final error = _validatePrice(value);
@@ -227,8 +276,14 @@ class _ProductFiltersState extends State<ProductFilters> {
                 spacing: 12,
                 runSpacing: 8,
                 children: [
-                  FilledButton(onPressed: _applyPrices, child: const Text('Применить цену')),
-                  TextButton(onPressed: _reset, child: const Text('Сбросить фильтры')),
+                  FilledButton(
+                    onPressed: _applyPrices,
+                    child: const Text('Применить цену'),
+                  ),
+                  TextButton(
+                    onPressed: _reset,
+                    child: const Text('Сбросить фильтры'),
+                  ),
                 ],
               ),
             ],

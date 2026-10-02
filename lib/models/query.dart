@@ -3,6 +3,8 @@ import 'product.dart';
 class Query {
   const Query({
     this.search = '',
+    this.hasCartItems,
+    this.hasProducts,
     this.type,
     this.brandId,
     this.priceFrom,
@@ -16,6 +18,8 @@ class Query {
        assert(size == 10 || size == 25 || size == 50);
 
   final String search;
+  final bool? hasCartItems;
+  final bool? hasProducts;
   final ProductType? type;
   final int? brandId;
   final int? priceFrom;
@@ -28,6 +32,10 @@ class Query {
 
   Query copyWith({
     String? search,
+    bool? hasCartItems,
+    bool clearHasCartItems = false,
+    bool? hasProducts,
+    bool clearHasProducts = false,
     ProductType? type,
     bool clearType = false,
     int? brandId,
@@ -44,6 +52,8 @@ class Query {
   }) {
     return Query(
       search: search ?? this.search,
+      hasCartItems: clearHasCartItems ? null : (hasCartItems ?? this.hasCartItems),
+      hasProducts: clearHasProducts ? null : (hasProducts ?? this.hasProducts),
       type: clearType ? null : (type ?? this.type),
       brandId: clearBrand ? null : (brandId ?? this.brandId),
       priceFrom: clearPriceFrom ? null : (priceFrom ?? this.priceFrom),

@@ -1,4 +1,5 @@
 import '../widgets/record_action.dart';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -33,13 +34,16 @@ class ProductList extends StatelessWidget {
         actionError: () => state.actionError,
       );
     }
+
     final deletedSwitch = Row(
       children: [
         Checkbox(
           value: state.query.includeDeleted,
-          onChanged: state.saving ? null : (value) => onQueryChanged(
-            state.query.copyWith(includeDeleted: value ?? false),
-          ),
+          onChanged: state.saving
+              ? null
+              : (value) => onQueryChanged(
+                  state.query.copyWith(includeDeleted: value ?? false),
+                ),
         ),
         const Flexible(child: Text('Показывать удалённые')),
       ],
@@ -54,143 +58,166 @@ class ProductList extends StatelessWidget {
       onSizeChanged: (size) => onQueryChanged(state.query.copyWith(size: size)),
     );
     final content = switch (state.status) {
-        LoadStatus.idle || LoadStatus.loading =>
-          const Center(child: CircularProgressIndicator()),
-        LoadStatus.error => StatusView(
-          message: state.error ?? 'Не удалось загрузить товары',
-          onRetry: state.load,
-        ),
-        LoadStatus.empty => Column(
-          children: [
-            const Expanded(child: StatusView(message: 'Товары не найдены')),
-            pagination,
-          ],
-        ),
-        LoadStatus.success => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text('Показано: ${state.result.items.length} из ${state.result.total}'),
-                Text('Выбрано: ${state.selected.length}'),
-                if (state.hasSelection)
-                  FilledButton(
-                    onPressed: state.saving ? null : () => change(
-                      'Удалить выбранные записи?',
-                      'Выбрано записей: ${state.selected.length}. Их можно будет восстановить.',
-                      state.deleteSelected,
-                    ),
-                    child: const Text('Удалить выбранные'),
-                  ),
+      LoadStatus.idle ||
+      LoadStatus.loading => const Center(child: CircularProgressIndicator()),
+      LoadStatus.error => StatusView(
+        message: state.error ?? 'Не удалось загрузить товары',
+        onRetry: state.load,
+      ),
+      LoadStatus.empty => Column(
+        children: [
+          const Expanded(child: StatusView(message: 'Товары не найдены')),
+          pagination,
+        ],
+      ),
+      LoadStatus.success => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                'Показано: ${state.result.items.length} из ${state.result.total}',
+              ),
+              Text('Выбрано: ${state.selected.length}'),
+              if (state.hasSelection)
+                FilledButton(
+                  onPressed: state.saving
+                      ? null
+                      : () => change(
+                          'Удалить выбранные записи?',
+                          'Выбрано записей: ${state.selected.length}. Их можно будет восстановить.',
+                          state.deleteSelected,
+                        ),
+                  child: const Text('Удалить выбранные'),
+                ),
 
-                if (state.hasSelection)
-                  TextButton(
-                    onPressed: state.saving ? null : state.clearSelection,
-                    child: const Text('Снять выделение'),
+              if (state.hasSelection)
+                TextButton(
+                  onPressed: state.saving ? null : state.clearSelection,
+                  child: const Text('Снять выделение'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: EntityTable<Product>(
+              items: state.result.items,
+              idOf: (item) => item.id,
+              selected: state.selected,
+              onToggleSelect: state.saving ? null : state.toggleSelection,
+              onSelectAll: state.saving ? null : state.selectAll,
+              canSelect: (item) => !item.isDeleted,
+              sortField: state.query.sortField,
+              sortAscending: state.query.sortAscending,
+              onSort: state.saving
+                  ? null
+                  : (field, ascending) {
+                      onQueryChanged(
+                        state.query.copyWith(
+                          sortField: field,
+                          sortAscending: ascending,
+                        ),
+                      );
+                    },
+              columns: [
+                TableColumnSpec(
+                  label: 'Название',
+                  sortField: 'name',
+                  build: (item) => SizedBox(
+                    width: 220,
+                    child: Text(
+                      item.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                ),
+                TableColumnSpec(
+                  label: 'Артикул',
+                  sortField: 'sku',
+                  build: (item) => Text(item.sku),
+                ),
+                TableColumnSpec(
+                  label: 'Тип',
+                  build: (item) => Text(productTypeName(item.type)),
+                ),
+                TableColumnSpec(
+                  label: 'Цена',
+                  sortField: 'price',
+                  numeric: true,
+                  build: (item) => Text(formatPrice(item.price)),
+                ),
+                TableColumnSpec(
+                  label: 'Платформа',
+                  build: (item) => Text(state.platformName(item.platformId)),
+                ),
+                TableColumnSpec(
+                  label: 'Статус',
+                  build: (item) => Text(item.isDeleted ? 'Удалён' : 'Активен'),
+                ),
+              ],
+              actions: (item) => [
+                if (!item.isDeleted) TextButton(onPressed: state.saving ? null : () => context.go('/products/${item.id}/edit'), child: const Text('Изменить')),
+                TextButton(
+                  onPressed: () =>
+                      context.go(queryUrl('/products/${item.id}', state.query)),
+                  child: const Text('Открыть'),
+                ),
+                if (!item.isDeleted)
+                  TextButton(
+                    onPressed: state.saving
+                        ? null
+                        : () => change(
+                            'Удалить запись?',
+                            '«${item.name}» будет скрыт из обычного списка. Запись можно восстановить.',
+                            () => state.softDelete(item.id),
+                          ),
+                    child: const Text('Удалить'),
+                  ),
+                if (item.isDeleted) ...[
+                  TextButton(
+                    onPressed: state.saving
+                        ? null
+                        : () => change(
+                            'Восстановить запись?',
+                            '«${item.name}» снова появится в обычном списке.',
+                            () => state.restore(item.id),
+                          ),
+                    child: const Text('Восстановить'),
+                  ),
+                  TextButton(
+                    onPressed: state.saving
+                        ? null
+                        : () => change(
+                            'Удалить навсегда?',
+                            '«${item.name}» будет полностью удалён. Восстановление через интерфейс будет невозможно.',
+                            () => state.hardDelete(item.id),
+                          ),
+                    child: const Text('Удалить навсегда'),
+                  ),
+                ],
               ],
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: EntityTable<Product>(
-                items: state.result.items,
-                idOf: (item) => item.id,
-                selected: state.selected,
-                onToggleSelect: state.saving ? null : state.toggleSelection,
-                onSelectAll: state.saving ? null : state.selectAll,
-                canSelect: (item) => !item.isDeleted,
-                sortField: state.query.sortField,
-                sortAscending: state.query.sortAscending,
-                onSort: state.saving ? null : (field, ascending) {
-                  onQueryChanged(state.query.copyWith(
-                    sortField: field,
-                    sortAscending: ascending,
-                  ));
-                },
-                columns: [
-                  TableColumnSpec(
-                    label: 'Название',
-                    sortField: 'name',
-                    build: (item) => SizedBox(
-                      width: 220,
-                      child: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-                    ),
-                  ),
-                  TableColumnSpec(
-                    label: 'Артикул',
-                    sortField: 'sku',
-                    build: (item) => Text(item.sku),
-                  ),
-                  TableColumnSpec(
-                    label: 'Тип',
-                    build: (item) => Text(productTypeName(item.type)),
-                  ),
-                  TableColumnSpec(
-                    label: 'Цена',
-                    sortField: 'price',
-                    numeric: true,
-                    build: (item) => Text(formatPrice(item.price)),
-                  ),
-                  TableColumnSpec(
-                    label: 'Платформа',
-                    build: (item) => Text(item.platform),
-                  ),
-                  TableColumnSpec(
-                    label: 'Статус',
-                    build: (item) => Text(item.isDeleted ? 'Удалён' : 'Активен'),
-                  ),
-                ],
-                actions: (item) => [
-                  TextButton(
-                    onPressed: () => context.go(queryUrl('/products/${item.id}', state.query)),
-                    child: const Text('Открыть'),
-                  ),
-                  if (!item.isDeleted)
-                    TextButton(
-                      onPressed: state.saving ? null : () => change(
-                        'Удалить запись?',
-                        '«${item.name}» будет скрыт из обычного списка. Запись можно восстановить.',
-                        () => state.softDelete(item.id),
-                      ),
-                      child: const Text('Удалить'),
-                    ),
-                  if (item.isDeleted) ...[
-                    TextButton(
-                      onPressed: state.saving ? null : () => change(
-                        'Восстановить запись?',
-                        '«${item.name}» снова появится в обычном списке.',
-                        () => state.restore(item.id),
-                      ),
-                      child: const Text('Восстановить'),
-                    ),
-                    TextButton(
-                      onPressed: state.saving ? null : () => change(
-                        'Удалить навсегда?',
-                        '«${item.name}» будет полностью удалён. Восстановление через интерфейс будет невозможно.',
-                        () => state.hardDelete(item.id),
-                      ),
-                      child: const Text('Удалить навсегда'),
-                    ),
-                  ],
-
-                ],
-              ),
-            ),
-            pagination,
-          ],
-        ),
-      };
+          ),
+          pagination,
+        ],
+      ),
+    };
     return ShopPage(
       title: 'Каталог товаров',
       child: LayoutBuilder(
         builder: (context, constraints) {
           return Column(
             children: [
+              Align(alignment: Alignment.centerLeft, child: FilledButton(onPressed: state.saving ? null : () => context.go('/products/new'), child: const Text('Добавить товар'))),
+              const SizedBox(height: 8),
               ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: constraints.maxHeight * 0.55),
+                constraints: BoxConstraints(
+                  maxHeight: constraints.maxHeight * 0.55,
+                ),
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -199,7 +226,10 @@ class ProductList extends StatelessWidget {
                             title: const Text('Поиск и фильтры'),
                             maintainState: true,
                             children: [
-                              ProductFilters(query: state.query, onChanged: onQueryChanged),
+                              ProductFilters(
+                                query: state.query,
+                                onChanged: onQueryChanged,
+                              ),
                             ],
                           )
                         : ProductFilters(

@@ -25,18 +25,23 @@ class BrandDetail extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
-              onPressed: () => context.go(Uri(
-                path: '/brands',
-                queryParameters: GoRouterState.of(context).uri.queryParameters,
-              ).toString()),
+              onPressed: () => context.go(
+                Uri(
+                  path: '/brands',
+                  queryParameters: GoRouterState.of(context)
+                      .uri
+                      .queryParameters,
+                ).toString(),
+              ),
               child: const Text('К списку брендов'),
             ),
           ),
           const SizedBox(height: 12),
           Expanded(
             child: switch (state.status) {
-              LoadStatus.idle || LoadStatus.loading =>
-                const Center(child: CircularProgressIndicator()),
+              LoadStatus.idle || LoadStatus.loading => const Center(
+                child: CircularProgressIndicator(),
+              ),
               LoadStatus.error => StatusView(
                 message: state.error ?? 'Не удалось загрузить бренд',
                 onRetry: state.load,
@@ -49,19 +54,27 @@ class BrandDetail extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(brand!.name,
-                            style: Theme.of(context).textTheme.headlineSmall),
+                        Text(
+                          brand!.name,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                         const SizedBox(height: 16),
                         Text('ID: ${brand.id}'),
-                        Text('Статус: ${brand.isDeleted ? 'Удалён' : 'Активен'}'),
+                        Text(
+                          'Статус: ${brand.isDeleted ? 'Удалён' : 'Активен'}',
+                        ),
                         const SizedBox(height: 12),
                         if (brands.status == LoadStatus.success ||
                             brands.status == LoadStatus.empty)
-                          Text('Активных товаров: ${brands.productCount(brand.id)}')
+                          Text(
+                            'Активных товаров: ${brands.productCount(brand.id)}',
+                          )
                         else if (brands.status == LoadStatus.error)
                           TextButton(
                             onPressed: brands.load,
-                            child: const Text('Повторить загрузку количества товаров'),
+                            child: const Text(
+                              'Повторить загрузку количества товаров',
+                            ),
                           )
                         else
                           const Text('Загрузка количества товаров…'),
