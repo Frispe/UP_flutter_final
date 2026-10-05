@@ -27,7 +27,9 @@ int? _price(Map<String, String> values, String name) {
 
 Query readQuery(Uri uri, {required bool brands}) {
   final values = uri.queryParameters;
-  final fields = uri.path.startsWith('/users') ? ['name', 'id', 'email', 'nickname'] : brands
+  final fields = uri.path.startsWith('/users')
+      ? ['name', 'id', 'email', 'nickname']
+      : brands
       ? ['name', 'id', 'productCount']
       : ['name', 'sku', 'price'];
   final sort = (values['sort'] ?? 'name,asc').split(',');
@@ -60,13 +62,22 @@ Query readQuery(Uri uri, {required bool brands}) {
   }
   bool? optionalBool(String name) {
     final value = values[name];
-    if (value == null) { return null; }
-    if (value != 'true' && value != 'false') { throw FormatException('Некорректный параметр $name'); }
+    if (value == null) {
+      return null;
+    }
+    if (value != 'true' && value != 'false') {
+      throw FormatException('Некорректный параметр $name');
+    }
     return value == 'true';
   }
+
   return Query(
-    hasProducts: brands && !uri.path.startsWith('/users') ? optionalBool('hasProducts') : null,
-    hasCartItems: uri.path.startsWith('/users') ? optionalBool('hasCartItems') : null,
+    hasProducts: brands && !uri.path.startsWith('/users')
+        ? optionalBool('hasProducts')
+        : null,
+    hasCartItems: uri.path.startsWith('/users')
+        ? optionalBool('hasCartItems')
+        : null,
     search: values['search'] ?? '',
     type: type,
     brandId: brands ? null : _number(values, 'brandId', minimum: 1),
@@ -94,8 +105,10 @@ String queryUrl(String path, Query query) {
         'priceFrom': price(query.priceFrom!),
       if (!brands && query.priceTo != null) 'priceTo': price(query.priceTo!),
       'sort': '${query.sortField},${query.sortAscending ? 'asc' : 'desc'}',
-      if (brands && !path.startsWith('/users') && query.hasProducts != null) 'hasProducts': '${query.hasProducts}',
-      if (path.startsWith('/users') && query.hasCartItems != null) 'hasCartItems': '${query.hasCartItems}',
+      if (brands && !path.startsWith('/users') && query.hasProducts != null)
+        'hasProducts': '${query.hasProducts}',
+      if (path.startsWith('/users') && query.hasCartItems != null)
+        'hasCartItems': '${query.hasCartItems}',
       'page': '${query.page}',
       'size': '${query.size}',
       if (query.includeDeleted) 'includeDeleted': 'true',

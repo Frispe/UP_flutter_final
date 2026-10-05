@@ -10,9 +10,12 @@ class Cart {
     return Cart(id: id, userId: userId ?? this.userId);
   }
 
-  Map<String, dynamic> toJson() => {'id': id, 'userId': userId};
+  Map<String, dynamic> toJson() => {'id': id, 'customerId': userId};
 
   factory Cart.fromJson(Map<String, dynamic> json) {
-    return Cart(id: readInt(json['id']), userId: readInt(json['userId']));
+    return Cart(
+      id: readInt(json['id']),
+      userId: readInt(json['customerId'] ?? json['userId']),
+    );
   }
 }

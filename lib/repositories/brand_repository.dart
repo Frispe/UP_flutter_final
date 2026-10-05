@@ -6,6 +6,7 @@ import 'store.dart';
 abstract interface class BrandRepository {
   Future<PageResult<Brand>> find(Query query);
   Future<Brand?> findById(int id);
+  Future<List<Brand>> options({bool includeDeleted = false});
   Future<Map<int, int>> productCounts();
   Future<Brand> create(Brand brand);
   Future<Brand> update(Brand brand);
@@ -40,7 +41,8 @@ class MemoryBrandRepository implements BrandRepository {
     final search = query.search.trim().toLowerCase();
     final rows = _store.brands.where((brand) {
       return (query.includeDeleted || !brand.isDeleted) &&
-          (query.hasProducts == null || ((_counts()[brand.id] ?? 0) > 0) == query.hasProducts) &&
+          (query.hasProducts == null ||
+              ((_counts()[brand.id] ?? 0) > 0) == query.hasProducts) &&
           brand.name.toLowerCase().contains(search);
     }).toList();
     final counts = _counts();
@@ -68,6 +70,12 @@ class MemoryBrandRepository implements BrandRepository {
     return null;
   }
 
+  @override
+  Future<List<Brand>> options({bool includeDeleted = false}) async =>
+      List.unmodifiable(
+        _store.brands.where((item) => includeDeleted || !item.isDeleted),
+      );
+
   int _indexOf(int id) {
     final index = _store.brands.indexWhere((item) => item.id == id);
     if (index == -1) {
@@ -84,7 +92,9 @@ class MemoryBrandRepository implements BrandRepository {
     }
     final used = _store.products.where((item) => item.brandId == currentId);
     if (used.any((item) => !brand.platformIds.contains(item.platformId))) {
-      throw ArgumentError('Нельзя убрать платформу, используемую товарами бренда');
+      throw ArgumentError(
+        'Нельзя убрать платформу, используемую товарами бренда',
+      );
     }
     final name = brand.name.trim().toLowerCase();
     if (name.isEmpty) {
@@ -123,7 +133,9 @@ class MemoryBrandRepository implements BrandRepository {
 
   void _checkDelete(int id) {
     _indexOf(id);
-    final count = _store.products.where((product) => product.brandId == id).length;
+    final count = _store.products
+        .where((product) => product.brandId == id)
+        .length;
     if (count > 0) {
       throw StateError('Удаление невозможно. Связанных товаров: $count');
     }
@@ -157,7 +169,9 @@ class MemoryBrandRepository implements BrandRepository {
   @override
   Future<int> deleteMany(List<int> ids) => _store.change<int>(() {
     final selected = ids.toSet();
-    for (final brand in _store.brands.where((item) => selected.contains(item.id) && !item.isDeleted)) {
+    for (final brand in _store.brands.where(
+      (item) => selected.contains(item.id) && !item.isDeleted,
+    )) {
       _checkDelete(brand.id);
     }
     final now = DateTime.now();

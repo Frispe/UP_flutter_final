@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../core/api_exceptions.dart';
 import '../models/product.dart';
 import '../models/page_result.dart';
 import '../models/query.dart';
@@ -17,6 +18,7 @@ class ProductState extends ChangeNotifier {
   LoadStatus _status = LoadStatus.idle;
   String? _error;
   String? _actionError;
+  Map<String, String> _validationErrors = {};
   final Set<int> _selected = {};
   bool _saving = false;
   bool _disposed = false;
@@ -27,6 +29,8 @@ class ProductState extends ChangeNotifier {
   LoadStatus get status => _status;
   String? get error => _error;
   String? get actionError => _actionError;
+  Map<String, String> get validationErrors =>
+      Map.unmodifiable(_validationErrors);
   Set<int> get selected => Set.unmodifiable(_selected);
   bool get hasSelection => _selected.isNotEmpty;
   bool get saving => _saving;
@@ -112,19 +116,22 @@ class ProductState extends ChangeNotifier {
     while (true) {
       final result = await _repository.find(Query(page: page, size: 50));
       items.addAll(result.items);
-      if (!result.hasNext) { break; }
+      if (!result.hasNext) {
+        break;
+      }
       page = result.page + 1;
     }
     return List.unmodifiable(items);
   }
 
-
-  Future<bool> skuExists(String sku, {int? exceptId}) => _repository.skuExists(sku, exceptId: exceptId);
+  Future<bool> skuExists(String sku, {int? exceptId}) =>
+      _repository.skuExists(sku, exceptId: exceptId);
 
   Future<bool> _change(Future<void> Function() action) async {
     if (_disposed || _saving) return false;
     _saving = true;
     _actionError = null;
+    _validationErrors = {};
     ++_request;
     _notify();
     try {
@@ -134,6 +141,13 @@ class ProductState extends ChangeNotifier {
       await load();
       if (!_disposed) await onChanged?.call();
       return true;
+    } on ValidationException catch (error) {
+      if (!_disposed) {
+        _validationErrors = error.errors;
+        _actionError = error.message;
+      }
+      if (!_disposed && _status == LoadStatus.loading) await load();
+      return false;
     } catch (error) {
       if (!_disposed) _actionError = errorText(error);
       if (!_disposed && _status == LoadStatus.loading) await load();

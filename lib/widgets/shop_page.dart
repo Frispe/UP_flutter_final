@@ -1,6 +1,7 @@
 import 'package:provider/provider.dart';
 
 import '../state/storage_state.dart';
+import '../state/auth_state.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,17 @@ class ShopPage extends StatelessWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text('Digital Shop'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Center(child: Text(context.watch<AuthState>().name ?? '')),
+          ),
+          TextButton(
+            onPressed: context.read<AuthState>().logout,
+            child: const Text('Выйти'),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: Center(
@@ -65,6 +77,7 @@ class ShopPage extends StatelessWidget {
                         '/categories': 'Категории',
                         '/platforms': 'Платформы',
                         '/users': 'Пользователи',
+                        '/orders': 'Заказы',
                       }.entries)
                         TextButton(
                           onPressed: () => context.go(entry.key),

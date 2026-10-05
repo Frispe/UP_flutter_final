@@ -107,15 +107,7 @@ class BrandState extends ChangeNotifier {
   Future<Brand?> findById(int id) => _repository.findById(id);
 
   Future<List<Brand>> findOptions({bool includeDeleted = false}) async {
-    final brands = <Brand>[];
-    var page = 1;
-    while (true) {
-      final result = await _repository.find(Query(page: page, size: 50, includeDeleted: includeDeleted));
-      brands.addAll(result.items);
-      if (!result.hasNext) break;
-      page = result.page + 1;
-    }
-    return List.unmodifiable(brands);
+    return _repository.options(includeDeleted: includeDeleted);
   }
 
   Future<bool> _change(Future<void> Function() action) async {

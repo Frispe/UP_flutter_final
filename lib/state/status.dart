@@ -1,6 +1,11 @@
+import '../core/api_exceptions.dart';
+
 enum LoadStatus { idle, loading, success, empty, error }
 
 String errorText(Object error) {
+  if (error is ApiException) {
+    return error.message;
+  }
   if (error is ArgumentError) {
     return error.message?.toString() ?? 'Некорректные данные';
   }

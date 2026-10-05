@@ -124,13 +124,16 @@ class UserState extends ChangeNotifier {
 
   Future<User?> findById(int id) => _repository.findById(id);
 
-  Future<bool> emailExists(String email, {int? exceptId}) => _repository.emailExists(email, exceptId: exceptId);
+  Future<bool> emailExists(String email, {int? exceptId}) =>
+      _repository.emailExists(email, exceptId: exceptId);
 
   Future<List<User>> findOptions({bool includeDeleted = false}) async {
     final users = <User>[];
     var page = 1;
     while (true) {
-      final result = await _repository.find(Query(page: page, size: 50, includeDeleted: includeDeleted));
+      final result = await _repository.find(
+        Query(page: page, size: 50, includeDeleted: includeDeleted),
+      );
       users.addAll(result.items);
       if (!result.hasNext) {
         break;

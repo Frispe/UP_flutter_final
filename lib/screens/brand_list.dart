@@ -152,9 +152,13 @@ class BrandList extends StatelessWidget {
                 ),
               ],
               actions: (item) => [
-                  if (!item.isDeleted) TextButton(
-                    onPressed: state.saving ? null : () => context.go('/brands/${item.id}/edit'),
-                    child: const Text('Изменить')),
+                if (!item.isDeleted)
+                  TextButton(
+                    onPressed: state.saving
+                        ? null
+                        : () => context.go('/brands/${item.id}/edit'),
+                    child: const Text('Изменить'),
+                  ),
                 TextButton(
                   onPressed: () =>
                       context.go(queryUrl('/brands/${item.id}', state.query)),
@@ -204,8 +208,13 @@ class BrandList extends StatelessWidget {
       title: 'Бренды',
       child: Column(
         children: [
-          Align(alignment: Alignment.centerLeft, child: FilledButton(
-            onPressed: () => context.go('/brands/new'), child: const Text('Добавить бренд'))),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton(
+              onPressed: () => context.go('/brands/new'),
+              child: const Text('Добавить бренд'),
+            ),
+          ),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -221,11 +230,19 @@ class BrandList extends StatelessWidget {
             key: ValueKey(state.query.hasProducts),
             initialValue: state.query.hasProducts?.toString() ?? 'all',
             decoration: const InputDecoration(labelText: 'Наличие товаров'),
-            items: const [DropdownMenuItem(value: 'all', child: Text('Все бренды')),
+            items: const [
+              DropdownMenuItem(value: 'all', child: Text('Все бренды')),
               DropdownMenuItem(value: 'true', child: Text('С товарами')),
-              DropdownMenuItem(value: 'false', child: Text('Без товаров'))],
-            onChanged: state.saving ? null : (value) => onQueryChanged(state.query.copyWith(
-              hasProducts: value == 'true', clearHasProducts: value == 'all')),
+              DropdownMenuItem(value: 'false', child: Text('Без товаров')),
+            ],
+            onChanged: state.saving
+                ? null
+                : (value) => onQueryChanged(
+                    state.query.copyWith(
+                      hasProducts: value == 'true',
+                      clearHasProducts: value == 'all',
+                    ),
+                  ),
           ),
           deletedSwitch,
           Expanded(child: content),

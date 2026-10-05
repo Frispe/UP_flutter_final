@@ -160,7 +160,13 @@ class ProductList extends StatelessWidget {
                 ),
               ],
               actions: (item) => [
-                if (!item.isDeleted) TextButton(onPressed: state.saving ? null : () => context.go('/products/${item.id}/edit'), child: const Text('Изменить')),
+                if (!item.isDeleted)
+                  TextButton(
+                    onPressed: state.saving
+                        ? null
+                        : () => context.go('/products/${item.id}/edit'),
+                    child: const Text('Изменить'),
+                  ),
                 TextButton(
                   onPressed: () =>
                       context.go(queryUrl('/products/${item.id}', state.query)),
@@ -212,7 +218,15 @@ class ProductList extends StatelessWidget {
         builder: (context, constraints) {
           return Column(
             children: [
-              Align(alignment: Alignment.centerLeft, child: FilledButton(onPressed: state.saving ? null : () => context.go('/products/new'), child: const Text('Добавить товар'))),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton(
+                  onPressed: state.saving
+                      ? null
+                      : () => context.go('/products/new'),
+                  child: const Text('Добавить товар'),
+                ),
+              ),
               const SizedBox(height: 8),
               ConstrainedBox(
                 constraints: BoxConstraints(

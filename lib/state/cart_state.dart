@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../repositories/cart_repository.dart';
 import 'status.dart';
 
@@ -72,9 +73,12 @@ class CartState extends ChangeNotifier {
     }
   }
 
-  Future<bool> add(int productId, {int quantity = 1}) => _change((id) => _repository.add(id, productId, quantity: quantity));
-  Future<bool> setQuantity(int itemId, int quantity) => _change((id) => _repository.setQuantity(id, itemId, quantity));
-  Future<bool> remove(int itemId) => _change((id) => _repository.remove(id, itemId));
+  Future<bool> add(int productId, {int quantity = 1}) =>
+      _change((id) => _repository.add(id, productId, quantity: quantity));
+  Future<bool> setQuantity(int itemId, int quantity) =>
+      _change((id) => _repository.setQuantity(id, itemId, quantity));
+  Future<bool> remove(int itemId) =>
+      _change((id) => _repository.remove(id, itemId));
   Future<bool> clear() => _change(_repository.clear);
 
   @override

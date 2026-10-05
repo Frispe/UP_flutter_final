@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
+
 import '../form_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../state/status.dart';
@@ -80,10 +82,14 @@ class _ShopFormState extends State<ShopForm> {
         title: const Text('Есть несохранённые изменения'),
         content: const Text('Уйти со страницы и потерять внесённые изменения?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Остаться')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Уйти без сохранения')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Остаться'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Уйти без сохранения'),
+          ),
         ],
       ),
     );
@@ -111,7 +117,6 @@ class _ShopFormState extends State<ShopForm> {
     }
     super.dispose();
   }
-
 
   Future<void> _submit() async {
     if (_saving) {
@@ -167,67 +172,67 @@ class _ShopFormState extends State<ShopForm> {
         }
       },
       child: ShopPage(
-      title: widget.title,
-      child: SingleChildScrollView(
-        child: Align(
-          alignment: Alignment.topLeft,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Form(
-              key: _key,
-              onChanged: _changed,
-              autovalidateMode: _submitted
-                  ? AutovalidateMode.onUserInteraction
-                  : AutovalidateMode.disabled,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AbsorbPointer(
-                    absorbing: _saving,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final field in widget.fields)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: field,
+        title: widget.title,
+        child: SingleChildScrollView(
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Form(
+                key: _key,
+                onChanged: _changed,
+                autovalidateMode: _submitted
+                    ? AutovalidateMode.onUserInteraction
+                    : AutovalidateMode.disabled,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AbsorbPointer(
+                      absorbing: _saving,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final field in widget.fields)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: field,
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (_saving) const LinearProgressIndicator(),
+                    if (_error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          _error!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
                           ),
+                        ),
+                      ),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        FilledButton(
+                          onPressed: _saving ? null : _submit,
+                          child: Text(
+                            _saving ? 'Сохранение…' : widget.submitLabel,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _saving ? null : _cancel,
+                          child: const Text('Отмена'),
+                        ),
                       ],
                     ),
-                  ),
-                  if (_saving) const LinearProgressIndicator(),
-                  if (_error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        _error!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: [
-                      FilledButton(
-                        onPressed: _saving ? null : _submit,
-                        child: Text(
-                          _saving ? 'Сохранение…' : widget.submitLabel,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _saving ? null : _cancel,
-                        child: const Text('Отмена'),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

@@ -88,23 +88,38 @@ class Store {
   }
 
   void _updateIds() {
-    final cartItemsMax = cartItems.fold<int>(0, (max, item) => item.id > max ? item.id : max);
+    final cartItemsMax = cartItems.fold<int>(
+      0,
+      (max, item) => item.id > max ? item.id : max,
+    );
     if (nextCartItemId <= cartItemsMax) {
       nextCartItemId = cartItemsMax + 1;
     }
-    final cartsMax = carts.fold<int>(0, (max, item) => item.id > max ? item.id : max);
+    final cartsMax = carts.fold<int>(
+      0,
+      (max, item) => item.id > max ? item.id : max,
+    );
     if (nextCartId <= cartsMax) {
       nextCartId = cartsMax + 1;
     }
-    final usersMax = users.fold<int>(0, (max, item) => item.id > max ? item.id : max);
+    final usersMax = users.fold<int>(
+      0,
+      (max, item) => item.id > max ? item.id : max,
+    );
     if (nextUserId <= usersMax) {
       nextUserId = usersMax + 1;
     }
-    final platformsMax = platforms.fold<int>(0, (max, item) => item.id > max ? item.id : max);
+    final platformsMax = platforms.fold<int>(
+      0,
+      (max, item) => item.id > max ? item.id : max,
+    );
     if (nextPlatformId <= platformsMax) {
       nextPlatformId = platformsMax + 1;
     }
-    final categoriesMax = categories.fold<int>(0, (max, item) => item.id > max ? item.id : max);
+    final categoriesMax = categories.fold<int>(
+      0,
+      (max, item) => item.id > max ? item.id : max,
+    );
     if (nextCategoryId <= categoriesMax) {
       nextCategoryId = categoriesMax + 1;
     }
@@ -236,11 +251,17 @@ class Store {
         ? json['nextProductId'] as int
         : 1;
     nextBrandId = json['nextBrandId'] is int ? json['nextBrandId'] as int : 1;
-    nextCategoryId = json['nextCategoryId'] is int ? json['nextCategoryId'] as int : 1;
-    nextPlatformId = json['nextPlatformId'] is int ? json['nextPlatformId'] as int : 1;
+    nextCategoryId = json['nextCategoryId'] is int
+        ? json['nextCategoryId'] as int
+        : 1;
+    nextPlatformId = json['nextPlatformId'] is int
+        ? json['nextPlatformId'] as int
+        : 1;
     nextUserId = json['nextUserId'] is int ? json['nextUserId'] as int : 1;
     nextCartId = json['nextCartId'] is int ? json['nextCartId'] as int : 1;
-    nextCartItemId = json['nextCartItemId'] is int ? json['nextCartItemId'] as int : 1;
+    nextCartItemId = json['nextCartItemId'] is int
+        ? json['nextCartItemId'] as int
+        : 1;
     _updateIds();
   }
 

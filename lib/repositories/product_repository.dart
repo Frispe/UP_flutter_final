@@ -24,9 +24,10 @@ class MemoryProductRepository implements ProductRepository {
   @override
   Future<bool> skuExists(String sku, {int? exceptId}) async {
     final value = sku.trim().toLowerCase();
-    return _store.products.any((item) => item.id != exceptId && item.sku.trim().toLowerCase() == value);
+    return _store.products.any(
+      (item) => item.id != exceptId && item.sku.trim().toLowerCase() == value,
+    );
   }
-
 
   @override
   String platformName(int id) {
@@ -112,8 +113,10 @@ class MemoryProductRepository implements ProductRepository {
         product.region.trim().isEmpty) {
       throw ArgumentError('Заполните обязательные поля товара');
     }
-    if (product.name.trim().length > 150 || product.sku.trim().length > 50 ||
-        product.description.trim().length > 2000 || product.region.trim().length > 100) {
+    if (product.name.trim().length > 150 ||
+        product.sku.trim().length > 50 ||
+        product.description.trim().length > 2000 ||
+        product.region.trim().length > 100) {
       throw ArgumentError('Превышена допустимая длина поля товара');
     }
     if (product.price > 99999999999) {
@@ -132,12 +135,16 @@ class MemoryProductRepository implements ProductRepository {
     if (product.type == ProductType.gameKey && product.durationMonths != null) {
       throw ArgumentError('У игрового ключа не должно быть срока подписки');
     }
-    if (!_store.platforms.any((item) => item.id == product.platformId && !item.isDeleted)) {
+    if (!_store.platforms.any(
+      (item) => item.id == product.platformId && !item.isDeleted,
+    )) {
       throw ArgumentError('Платформа не найдена');
     }
     if (product.categoryIds.isEmpty ||
         product.categoryIds.any(
-          (id) => !_store.categories.any((item) => item.id == id && !item.isDeleted),
+          (id) => !_store.categories.any(
+            (item) => item.id == id && !item.isDeleted,
+          ),
         )) {
       throw ArgumentError('Выберите существующие категории');
     }

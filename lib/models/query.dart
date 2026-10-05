@@ -52,7 +52,9 @@ class Query {
   }) {
     return Query(
       search: search ?? this.search,
-      hasCartItems: clearHasCartItems ? null : (hasCartItems ?? this.hasCartItems),
+      hasCartItems: clearHasCartItems
+          ? null
+          : (hasCartItems ?? this.hasCartItems),
       hasProducts: clearHasProducts ? null : (hasProducts ?? this.hasProducts),
       type: clearType ? null : (type ?? this.type),
       brandId: clearBrand ? null : (brandId ?? this.brandId),

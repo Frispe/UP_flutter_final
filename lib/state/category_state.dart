@@ -125,17 +125,7 @@ class CategoryState extends ChangeNotifier {
   Future<Category?> findById(int id) => _repository.findById(id);
 
   Future<List<Category>> findOptions({bool includeDeleted = false}) async {
-    final categorys = <Category>[];
-    var page = 1;
-    while (true) {
-      final result = await _repository.find(Query(page: page, size: 50, includeDeleted: includeDeleted));
-      categorys.addAll(result.items);
-      if (!result.hasNext) {
-        break;
-      }
-      page = result.page + 1;
-    }
-    return List.unmodifiable(categorys);
+    return _repository.options(includeDeleted: includeDeleted);
   }
 
   Future<bool> _change(Future<void> Function() action) async {

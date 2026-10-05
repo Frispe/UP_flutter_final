@@ -125,17 +125,7 @@ class PlatformState extends ChangeNotifier {
   Future<Platform?> findById(int id) => _repository.findById(id);
 
   Future<List<Platform>> findOptions({bool includeDeleted = false}) async {
-    final platforms = <Platform>[];
-    var page = 1;
-    while (true) {
-      final result = await _repository.find(Query(page: page, size: 50, includeDeleted: includeDeleted));
-      platforms.addAll(result.items);
-      if (!result.hasNext) {
-        break;
-      }
-      page = result.page + 1;
-    }
-    return List.unmodifiable(platforms);
+    return _repository.options(includeDeleted: includeDeleted);
   }
 
   Future<bool> _change(Future<void> Function() action) async {

@@ -1,61 +1,78 @@
-import 'repositories/cart_repository.dart';
-import 'state/cart_state.dart';
-import 'repositories/user_repository.dart';
-import 'state/user_state.dart';
-import 'repositories/platform_repository.dart';
-import 'state/platform_state.dart';
-import 'repositories/category_repository.dart';
-import 'state/category_state.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-
-import 'app.dart';
-
 import 'package:provider/provider.dart';
 
+import 'app.dart';
+import 'core/api_client.dart';
+import 'repositories/api_repositories.dart';
 import 'repositories/brand_repository.dart';
+import 'repositories/cart_repository.dart';
+import 'repositories/category_repository.dart';
+import 'repositories/platform_repository.dart';
 import 'repositories/product_repository.dart';
-import 'repositories/store.dart';
+import 'repositories/user_repository.dart';
+import 'state/auth_state.dart';
 import 'state/brand_state.dart';
+import 'state/cart_state.dart';
+import 'state/category_state.dart';
+import 'state/platform_state.dart';
 import 'state/product_state.dart';
+import 'state/order_state.dart';
 import 'state/storage_state.dart';
+import 'state/user_state.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
-  final store = await Store.open();
+
+  late AuthState auth;
+  final dio = buildDio(tokenProvider: () => auth.accessToken);
+  auth = AuthState(dio);
+
   runApp(
     MultiProvider(
       providers: [
-        Provider<Store>.value(value: store),
-        Provider<CartRepository>(create: (context) => CartRepository(context.read<Store>())),
-        ChangeNotifierProvider(create: (context) => CartState(context.read<CartRepository>())),
-        Provider<UserRepository>(create: (context) => UserRepository(context.read<Store>())),
-        ChangeNotifierProvider(create: (context) => UserState(context.read<UserRepository>())),
-        Provider<PlatformRepository>(create: (context) => PlatformRepository(context.read<Store>())),
-        ChangeNotifierProvider(create: (context) => PlatformState(context.read<PlatformRepository>())),
-        Provider<CategoryRepository>(create: (context) => CategoryRepository(context.read<Store>())),
-        ChangeNotifierProvider(create: (context) => CategoryState(context.read<CategoryRepository>())),
-        ChangeNotifierProvider(create: (_) => StorageState(store.message)),
-        Provider<BrandRepository>(
-          create: (context) => MemoryBrandRepository(context.read<Store>()),
+        Provider<Dio>.value(value: dio),
+        ChangeNotifierProvider<AuthState>.value(value: auth),
+        ChangeNotifierProvider(create: (_) => StorageState(null)),
+        Provider<CartRepository>(create: (_) => ApiCartRepository(dio)),
+        ChangeNotifierProvider(
+          create: (context) => CartState(context.read<CartRepository>()),
         ),
-        Provider<ProductRepository>(
-          create: (context) => MemoryProductRepository(context.read<Store>()),
+        Provider<UserRepository>(create: (_) => ApiUserRepository(dio)),
+        ChangeNotifierProvider(
+          create: (context) => UserState(context.read<UserRepository>()),
+        ),
+        Provider<PlatformRepository>(create: (_) => ApiPlatformRepository(dio)),
+        ChangeNotifierProvider(
+          create: (context) =>
+              PlatformState(context.read<PlatformRepository>()),
+        ),
+        Provider<CategoryRepository>(create: (_) => ApiCategoryRepository(dio)),
+        ChangeNotifierProvider(
+          create: (context) =>
+              CategoryState(context.read<CategoryRepository>()),
+        ),
+        Provider<BrandRepository>(create: (_) => ApiBrandRepository(dio)),
+        Provider<ProductRepository>(create: (_) => ApiProductRepository(dio)),
+        Provider<ApiOrderRepository>(create: (_) => ApiOrderRepository(dio)),
+        ChangeNotifierProvider(
+          create: (context) => OrderState(
+            context.read<ApiOrderRepository>(),
+            context.read<UserRepository>(),
+          ),
         ),
         ChangeNotifierProvider<BrandState>(
-          lazy: false,
-          create: (context) =>
-              BrandState(context.read<BrandRepository>())..load(),
+          create: (context) => BrandState(context.read<BrandRepository>()),
         ),
         ChangeNotifierProvider<ProductState>(
-          lazy: false,
           create: (context) {
             final brands = context.read<BrandState>();
             return ProductState(
               context.read<ProductRepository>(),
               onChanged: brands.load,
-            )..load();
+            );
           },
         ),
       ],
