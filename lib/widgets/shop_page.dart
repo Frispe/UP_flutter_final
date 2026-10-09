@@ -1,10 +1,9 @@
-import 'package:provider/provider.dart';
-
-import '../state/storage_state.dart';
-import '../state/auth_state.dart';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../state/auth_state.dart';
+import '../state/storage_state.dart';
 
 class ShopPage extends StatelessWidget {
   const ShopPage({super.key, required this.title, required this.child});
@@ -15,7 +14,20 @@ class ShopPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final storage = context.watch<StorageState>();
+    final auth = context.watch<AuthState>();
     final path = GoRouterState.of(context).uri.path;
+    final links = auth.role == 'customer'
+        ? {'/products': 'Товары', '/cart': 'Корзина', '/orders': 'Мои заказы'}
+        : {
+            '/products': 'Товары',
+            '/brands': 'Бренды',
+            '/categories': 'Категории',
+            '/platforms': 'Платформы',
+            '/users': 'Пользователи',
+            '/orders': 'Заказы',
+            if (auth.role == 'admin') '/accounts': 'Аккаунты',
+            if (auth.role == 'admin') '/statistics': 'Статистика',
+          };
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -23,12 +35,9 @@ class ShopPage extends StatelessWidget {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Center(child: Text(context.watch<AuthState>().name ?? '')),
+            child: Center(child: Text('${auth.name ?? ''} · ${_roleName(auth.role)}')),
           ),
-          TextButton(
-            onPressed: context.read<AuthState>().logout,
-            child: const Text('Выйти'),
-          ),
+          TextButton(onPressed: auth.logout, child: const Text('Выйти')),
           const SizedBox(width: 8),
         ],
       ),
@@ -44,41 +53,13 @@ class ShopPage extends StatelessWidget {
                   if (storage.message != null)
                     MaterialBanner(
                       content: Text(storage.message!),
-                      actions: [
-                        TextButton(
-                          onPressed: storage.dismiss,
-                          child: const Text('Понятно'),
-                        ),
-                      ],
+                      actions: [TextButton(onPressed: storage.dismiss, child: const Text('Понятно'))],
                     ),
                   Wrap(
                     spacing: 12,
                     runSpacing: 8,
                     children: [
-                      TextButton(
-                        onPressed: () => context.go('/products'),
-                        style: TextButton.styleFrom(
-                          backgroundColor: path.startsWith('/products')
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : null,
-                        ),
-                        child: const Text('Товары'),
-                      ),
-                      TextButton(
-                        onPressed: () => context.go('/brands'),
-                        style: TextButton.styleFrom(
-                          backgroundColor: path.startsWith('/brands')
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : null,
-                        ),
-                        child: const Text('Бренды'),
-                      ),
-                      for (final entry in {
-                        '/categories': 'Категории',
-                        '/platforms': 'Платформы',
-                        '/users': 'Пользователи',
-                        '/orders': 'Заказы',
-                      }.entries)
+                      for (final entry in links.entries)
                         TextButton(
                           onPressed: () => context.go(entry.key),
                           style: TextButton.styleFrom(
@@ -102,4 +83,10 @@ class ShopPage extends StatelessWidget {
       ),
     );
   }
+
+  String _roleName(String? role) => switch (role) {
+    'admin' => 'Администратор',
+    'manager' => 'Менеджер',
+    _ => 'Покупатель',
+  };
 }

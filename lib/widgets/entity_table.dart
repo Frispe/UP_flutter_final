@@ -106,7 +106,8 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
             ),
           ),
         ],
-        CheckboxListTile(
+        if (widget.onToggleSelect != null)
+          CheckboxListTile(
           contentPadding: EdgeInsets.zero,
           controlAffinity: ListTileControlAffinity.leading,
           title: const Text('Выбрать все на странице'),
@@ -132,7 +133,8 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  CheckboxListTile(
+                  if (widget.onToggleSelect != null)
+                    CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
                     controlAffinity: ListTileControlAffinity.leading,
                     title: Text('Запись № ${widget.idOf(item)}'),

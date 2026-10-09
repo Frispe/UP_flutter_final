@@ -12,6 +12,7 @@ import '../query_url.dart';
 import '../widgets/entity_table.dart';
 import '../widgets/pagination.dart';
 import '../state/product_state.dart';
+import '../state/auth_state.dart';
 import '../state/status.dart';
 import '../widgets/shop_page.dart';
 import '../widgets/status_view.dart';
@@ -24,6 +25,9 @@ class ProductList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ProductState>();
+    final auth = context.watch<AuthState>();
+    final canManage = auth.role == 'manager' || auth.role == 'admin';
+    final isAdmin = auth.role == 'admin';
     void change(String title, String message, Future<bool> Function() action) {
       changeRecord(
         context,
@@ -81,8 +85,8 @@ class ProductList extends StatelessWidget {
               Text(
                 'Показано: ${state.result.items.length} из ${state.result.total}',
               ),
-              Text('Выбрано: ${state.selected.length}'),
-              if (state.hasSelection)
+              if (canManage) Text('Выбрано: ${state.selected.length}'),
+              if (canManage && state.hasSelection)
                 FilledButton(
                   onPressed: state.saving
                       ? null
@@ -94,7 +98,7 @@ class ProductList extends StatelessWidget {
                   child: const Text('Удалить выбранные'),
                 ),
 
-              if (state.hasSelection)
+              if (canManage && state.hasSelection)
                 TextButton(
                   onPressed: state.saving ? null : state.clearSelection,
                   child: const Text('Снять выделение'),
@@ -107,8 +111,8 @@ class ProductList extends StatelessWidget {
               items: state.result.items,
               idOf: (item) => item.id,
               selected: state.selected,
-              onToggleSelect: state.saving ? null : state.toggleSelection,
-              onSelectAll: state.saving ? null : state.selectAll,
+              onToggleSelect: !canManage || state.saving ? null : state.toggleSelection,
+              onSelectAll: !canManage || state.saving ? null : state.selectAll,
               canSelect: (item) => !item.isDeleted,
               sortField: state.query.sortField,
               sortAscending: state.query.sortAscending,
@@ -160,7 +164,7 @@ class ProductList extends StatelessWidget {
                 ),
               ],
               actions: (item) => [
-                if (!item.isDeleted)
+                if (canManage && !item.isDeleted)
                   TextButton(
                     onPressed: state.saving
                         ? null
@@ -172,7 +176,7 @@ class ProductList extends StatelessWidget {
                       context.go(queryUrl('/products/${item.id}', state.query)),
                   child: const Text('Открыть'),
                 ),
-                if (!item.isDeleted)
+                if (canManage && !item.isDeleted)
                   TextButton(
                     onPressed: state.saving
                         ? null
@@ -183,7 +187,7 @@ class ProductList extends StatelessWidget {
                           ),
                     child: const Text('Удалить'),
                   ),
-                if (item.isDeleted) ...[
+                if (isAdmin && item.isDeleted) ...[
                   TextButton(
                     onPressed: state.saving
                         ? null
@@ -218,7 +222,8 @@ class ProductList extends StatelessWidget {
         builder: (context, constraints) {
           return Column(
             children: [
-              Align(
+              if (canManage)
+                Align(
                 alignment: Alignment.centerLeft,
                 child: FilledButton(
                   onPressed: state.saving
@@ -254,7 +259,7 @@ class ProductList extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              deletedSwitch,
+              if (isAdmin) deletedSwitch,
               Expanded(child: content),
             ],
           );

@@ -7,6 +7,7 @@ import '../models/order.dart';
 import '../models/order_item.dart';
 import '../models/product.dart';
 import '../state/order_state.dart';
+import '../state/auth_state.dart';
 import '../state/product_state.dart';
 import '../state/status.dart';
 import '../widgets/shop_page.dart';
@@ -98,6 +99,7 @@ class _OrderDetailState extends State<OrderDetail> {
     }
     final order = _order!;
     final state = context.watch<OrderState>();
+    final canManage = context.watch<AuthState>().role != 'customer';
     return ShopPage(
       title: 'Заказ № ${order.id}',
       child: ListView(
@@ -115,7 +117,8 @@ class _OrderDetailState extends State<OrderDetail> {
           Text('Дата: ${formatDate(order.orderedAt)}'),
           Text('Итого: ${formatPrice(order.totalPrice)}'),
           const SizedBox(height: 16),
-          Row(
+          if (canManage)
+            Row(
             children: [
               SizedBox(
                 width: 220,

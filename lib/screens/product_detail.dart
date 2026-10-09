@@ -1,4 +1,5 @@
 import '../state/product_state.dart';
+import '../state/auth_state.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -79,11 +80,11 @@ class ProductDetail extends StatelessWidget {
                           'Статус: ${product.isDeleted ? 'Удалён' : 'Активен'}',
                         ),
                         const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: () =>
-                              context.go('/brands/${product.brandId}'),
-                          child: Text('Открыть бренд № ${product.brandId}'),
-                        ),
+                        if (context.watch<AuthState>().role != 'customer')
+                          TextButton(
+                            onPressed: () => context.go('/brands/${product.brandId}'),
+                            child: Text('Открыть бренд № ${product.brandId}'),
+                          ),
                       ],
                     ),
                   ),

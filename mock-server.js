@@ -146,13 +146,25 @@ function seed() {
     username: 'admin',
     passwordHash: hash('admin123'),
     name: 'Администратор',
+    email: 'admin@digital-shop.local',
     role: 'admin',
+    customerId: null,
   });
   push('accounts', {
     username: 'manager',
     passwordHash: hash('manager123'),
     name: 'Менеджер',
+    email: 'manager@digital-shop.local',
     role: 'manager',
+    customerId: null,
+  });
+  push('accounts', {
+    username: 'customer',
+    passwordHash: hash('customer123!'),
+    name: 'Алексей Смирнов',
+    email: 'alex@example.com',
+    role: 'customer',
+    customerId: 1,
   });
 }
 
@@ -214,7 +226,7 @@ function currentAccount(req) {
   return db.accounts.find((account) => account.id === payload.sub && !account.deletedAt) || null;
 }
 
-const ROLE_LEVEL = { manager: 1, admin: 2 };
+const ROLE_LEVEL = { customer: 1, manager: 2, admin: 3 };
 function requireRole(res, account, role) {
   if (!account) {
     fail(res, 401, 'Требуется вход в систему');
@@ -225,6 +237,44 @@ function requireRole(res, account, role) {
     return false;
   }
   return true;
+}
+
+function publicAccount(account) {
+  return {
+    id: account.id,
+    username: account.username,
+    name: account.name,
+    email: account.email,
+    role: account.role,
+    customerId: account.customerId,
+    createdAt: account.createdAt,
+    deletedAt: account.deletedAt,
+  };
+}
+
+function issueSession(account) {
+  const now = Math.floor(Date.now() / 1000);
+  const accessToken = sign({ sub: account.id, role: account.role, type: 'access', exp: now + ACCESS_TTL });
+  const refreshToken = sign({ sub: account.id, type: 'refresh', exp: now + REFRESH_TTL });
+  db.refreshTokens.add(refreshToken);
+  return { accessToken, refreshToken, expiresIn: ACCESS_TTL, user: publicAccount(account) };
+}
+
+function ownsCart(account, cartId) {
+  const cart = db.carts.find((row) => row.id === Number(cartId) && !row.deletedAt);
+  return Boolean(cart && account && cart.customerId === account.customerId);
+}
+
+function canReadRow(account, collection, row) {
+  if (!['customers', 'carts', 'cartItems', 'orders', 'orderItems'].includes(collection)) return true;
+  if (!account) return false;
+  if (account.role !== 'customer') return true;
+  if (collection === 'customers') return row.id === account.customerId;
+  if (collection === 'carts') return row.customerId === account.customerId;
+  if (collection === 'cartItems') return ownsCart(account, row.cartId);
+  if (collection === 'orders') return row.customerId === account.customerId;
+  const order = db.orders.find((item) => item.id === row.orderId && !item.deletedAt);
+  return Boolean(order && order.customerId === account.customerId);
 }
 
 function searchableText(collection, row) {
@@ -449,21 +499,36 @@ function hasReferences(collection, id) {
 }
 
 async function handleAuth(req, res, path, method) {
+  if (path === '/api/auth/register' && method === 'POST') {
+    const body = await readBody(req);
+    if (!body) return fail(res, 400, 'Тело запроса не является корректным JSON');
+    const username = String(body.username || '').trim();
+    const password = String(body.password || '');
+    const name = String(body.name || '').trim();
+    const email = String(body.email || '').trim();
+    const nickname = String(body.nickname || '').trim();
+    const errors = {};
+    if (username.length < 3) errors.username = 'Логин должен содержать не меньше 3 символов';
+    else if (db.accounts.some((row) => !row.deletedAt && row.username.toLowerCase() === username.toLowerCase())) errors.username = 'Такой логин уже занят';
+    if (password.length < 8 || !/\d/.test(password) || !/[^A-Za-zА-Яа-яЁё0-9]/.test(password)) errors.password = 'Пароль должен содержать не меньше 8 символов, цифру и специальный знак';
+    if (!name) errors.name = 'Укажите имя';
+    if (!/^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(email)) errors.email = 'Некорректный адрес почты';
+    else if (db.customers.some((row) => !row.deletedAt && row.email.toLowerCase() === email.toLowerCase())) errors.email = 'Пользователь с такой почтой уже существует';
+    if (!nickname) errors.nickname = 'Укажите никнейм';
+    else if (db.customers.some((row) => !row.deletedAt && row.nickname.toLowerCase() === nickname.toLowerCase())) errors.nickname = 'Такой никнейм уже занят';
+    if (Object.keys(errors).length) return send(res, 422, { message: 'Ошибка валидации', errors });
+    const customerId = push('customers', { name, email, nickname });
+    push('carts', { customerId });
+    const accountId = push('accounts', { username, passwordHash: hash(password), name, email, role: 'customer', customerId });
+    const account = db.accounts.find((row) => row.id === accountId);
+    return send(res, 201, issueSession(account));
+  }
   if (path === '/api/auth/login' && method === 'POST') {
     const body = await readBody(req);
     if (!body) return fail(res, 400, 'Тело запроса не является корректным JSON');
     const account = db.accounts.find((row) => row.username === String(body.username || '').trim() && !row.deletedAt);
     if (!account || account.passwordHash !== hash(String(body.password || ''))) return fail(res, 401, 'Неверный логин или пароль');
-    const now = Math.floor(Date.now() / 1000);
-    const accessToken = sign({ sub: account.id, role: account.role, type: 'access', exp: now + ACCESS_TTL });
-    const refreshToken = sign({ sub: account.id, type: 'refresh', exp: now + REFRESH_TTL });
-    db.refreshTokens.add(refreshToken);
-    return send(res, 200, {
-      accessToken,
-      refreshToken,
-      expiresIn: ACCESS_TTL,
-      user: { id: account.id, username: account.username, name: account.name, role: account.role },
-    });
+    return send(res, 200, issueSession(account));
   }
   if (path === '/api/auth/refresh' && method === 'POST') {
     const body = await readBody(req);
@@ -473,16 +538,12 @@ async function handleAuth(req, res, path, method) {
     const account = db.accounts.find((row) => row.id === payload.sub && !row.deletedAt);
     if (!account) return fail(res, 401, 'Учётная запись не найдена');
     db.refreshTokens.delete(token);
-    const now = Math.floor(Date.now() / 1000);
-    const accessToken = sign({ sub: account.id, role: account.role, type: 'access', exp: now + ACCESS_TTL });
-    const refreshToken = sign({ sub: account.id, type: 'refresh', exp: now + REFRESH_TTL });
-    db.refreshTokens.add(refreshToken);
-    return send(res, 200, { accessToken, refreshToken, expiresIn: ACCESS_TTL });
+    return send(res, 200, issueSession(account));
   }
   if (path === '/api/auth/me' && method === 'GET') {
     const account = currentAccount(req);
     if (!account) return fail(res, 401, 'Требуется вход в систему');
-    return send(res, 200, { id: account.id, username: account.username, name: account.name, role: account.role });
+    return send(res, 200, publicAccount(account));
   }
   if (path === '/api/auth/logout' && method === 'POST') {
     const body = await readBody(req);
@@ -509,11 +570,51 @@ async function handle(req, res, url) {
     if (handled !== false) return handled;
   }
 
+  if (path === '/api/statistics' && method === 'GET') {
+    if (!requireRole(res, account, 'admin')) return;
+    const activeOrders = db.orders.filter((row) => !row.deletedAt);
+    return send(res, 200, {
+      products: db.products.filter((row) => !row.deletedAt).length,
+      customers: db.customers.filter((row) => !row.deletedAt).length,
+      orders: activeOrders.length,
+      revenue: activeOrders.filter((row) => row.status !== 'cancelled').reduce((sum, row) => sum + row.totalPrice, 0),
+      roles: {
+        customer: db.accounts.filter((row) => !row.deletedAt && row.role === 'customer').length,
+        manager: db.accounts.filter((row) => !row.deletedAt && row.role === 'manager').length,
+        admin: db.accounts.filter((row) => !row.deletedAt && row.role === 'admin').length,
+      },
+    });
+  }
+
+  if (path === '/api/accounts' && method === 'GET') {
+    if (!requireRole(res, account, 'admin')) return;
+    let rows = db.accounts.filter((row) => query.includeDeleted === 'true' || !row.deletedAt).map(publicAccount);
+    if (query.search) {
+      const value = query.search.toLowerCase();
+      rows = rows.filter((row) => [row.username, row.name, row.email, row.role].join(' ').toLowerCase().includes(value));
+    }
+    return send(res, 200, paginate(sortRows(rows, query.sort), query));
+  }
+
+  const accountRole = path.match(/^\/api\/accounts\/(\d+)\/role$/);
+  if (accountRole && method === 'PATCH') {
+    if (!requireRole(res, account, 'admin')) return;
+    const target = db.accounts.find((row) => row.id === Number(accountRole[1]) && !row.deletedAt);
+    if (!target) return fail(res, 404, 'Учётная запись не найдена');
+    if (target.id === account.id) return fail(res, 409, 'Нельзя изменить роль текущей учётной записи');
+    const body = await readBody(req);
+    if (!body) return fail(res, 400, 'Тело запроса не является корректным JSON');
+    if (!['customer', 'manager', 'admin'].includes(body.role)) return send(res, 422, { message: 'Ошибка валидации', errors: { role: 'Выберите существующую роль' } });
+    target.role = body.role;
+    return send(res, 200, publicAccount(target));
+  }
+
   const checkout = path.match(/^\/api\/carts\/(\d+)\/checkout$/);
   if (checkout && method === 'POST') {
-    if (!requireRole(res, account, 'manager')) return;
+    if (!requireRole(res, account, 'customer')) return;
     const cart = db.carts.find((row) => row.id === Number(checkout[1]) && !row.deletedAt);
     if (!cart) return fail(res, 404, 'Корзина не найдена');
+    if (account.role === 'customer' && cart.customerId !== account.customerId) return fail(res, 403, 'Можно оформить только собственную корзину');
     const items = db.cartItems.filter((row) => row.cartId === cart.id && !row.deletedAt);
     if (!items.length) return fail(res, 409, 'Нельзя оформить пустую корзину');
     let totalPrice = 0;
@@ -570,6 +671,10 @@ async function handle(req, res, url) {
   }
   if (id === null && method === 'GET') {
     let rows = query.includeDeleted === 'true' ? db[collection] : db[collection].filter((row) => !row.deletedAt);
+    if (['customers', 'carts', 'cartItems', 'orders', 'orderItems'].includes(collection)) {
+      if (!account) return fail(res, 401, 'Требуется вход в систему');
+      rows = rows.filter((row) => canReadRow(account, collection, row));
+    }
     rows = enrichRows(collection, rows);
     rows = applyFilters(collection, rows, query);
     rows = sortRows(rows, query.sort);
@@ -578,21 +683,26 @@ async function handle(req, res, url) {
   if (id !== null && method === 'GET') {
     const row = db[collection].find((item) => item.id === id && (query.includeDeleted === 'true' || !item.deletedAt));
     if (!row) return fail(res, 404, 'Запись не найдена');
+    if (!canReadRow(account, collection, row)) return fail(res, account ? 403 : 401, account ? 'Недостаточно прав для просмотра записи' : 'Требуется вход в систему');
     return send(res, 200, row);
   }
   if (id === null && method === 'POST') {
-    if (!requireRole(res, account, 'manager')) return;
     const body = await readBody(req);
     if (!body) return fail(res, 400, 'Тело запроса не является корректным JSON');
+    if (collection === 'cartItems' && account && account.role === 'customer') {
+      if (!ownsCart(account, body.cartId)) return fail(res, 403, 'Можно изменять только собственную корзину');
+    } else if (!requireRole(res, account, 'manager')) return;
     const errors = validate(collection, body);
     if (Object.keys(errors).length) return send(res, 422, { message: 'Ошибка валидации', errors });
     const newId = push(collection, normalize(collection, body));
     return send(res, 201, db[collection].find((row) => row.id === newId));
   }
   if (id !== null && (method === 'PUT' || method === 'PATCH')) {
-    if (!requireRole(res, account, 'manager')) return;
     const row = db[collection].find((item) => item.id === id && !item.deletedAt);
     if (!row) return fail(res, 404, 'Запись не найдена');
+    if (collection === 'cartItems' && account && account.role === 'customer') {
+      if (!ownsCart(account, row.cartId)) return fail(res, 403, 'Можно изменять только собственную корзину');
+    } else if (!requireRole(res, account, 'manager')) return;
     const body = await readBody(req);
     if (!body) return fail(res, 400, 'Тело запроса не является корректным JSON');
     const merged = method === 'PATCH' ? { ...row, ...body } : body;
@@ -603,9 +713,11 @@ async function handle(req, res, url) {
   }
   if (id !== null && method === 'DELETE') {
     const hard = query.hard === 'true';
-    if (!requireRole(res, account, hard ? 'admin' : 'manager')) return;
     const index = db[collection].findIndex((row) => row.id === id);
     if (index === -1) return fail(res, 404, 'Запись не найдена');
+    if (!hard && collection === 'cartItems' && account && account.role === 'customer') {
+      if (!ownsCart(account, db[collection][index].cartId)) return fail(res, 403, 'Можно изменять только собственную корзину');
+    } else if (!requireRole(res, account, hard ? 'admin' : 'manager')) return;
     if (hard) {
       if (hasReferences(collection, id)) return fail(res, 409, 'Запись используется в связанных данных и не может быть удалена окончательно');
       db[collection].splice(index, 1);
@@ -644,6 +756,6 @@ server.listen(PORT, () => {
   console.log('Учебное API «Магазин цифровых товаров»');
   console.log(`Адрес: http://localhost:${PORT}/api`);
   console.log(`Разрешённый источник: ${ORIGIN}`);
-  console.log('Учётные записи: admin/admin123, manager/manager123');
+  console.log('Учётные записи: admin/admin123, manager/manager123, customer/customer123!');
   console.log('');
 });

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../models/product.dart';
 import '../state/user_state.dart';
+import '../state/auth_state.dart';
 import '../state/product_state.dart';
 import '../state/cart_state.dart';
 import '../state/order_state.dart';
@@ -136,6 +137,7 @@ class _UserDetailState extends State<UserDetail> {
   Widget build(BuildContext context) {
     final cart = context.watch<CartState>();
     final orders = context.watch<OrderState>();
+    final isCustomer = context.watch<AuthState>().role == 'customer';
     if (_loading || _error != null) {
       return ShopPage(
         title: 'Пользователь',
@@ -154,7 +156,8 @@ class _UserDetailState extends State<UserDetail> {
           Wrap(
             spacing: 8,
             children: [
-              TextButton(
+              if (!isCustomer)
+                TextButton(
                 onPressed: () => context.go(
                   Uri(
                     path: '/users',
@@ -165,7 +168,7 @@ class _UserDetailState extends State<UserDetail> {
                 ),
                 child: const Text('К пользователям'),
               ),
-              if (!user.isDeleted)
+              if (!isCustomer && !user.isDeleted)
                 TextButton(
                   onPressed: cart.saving
                       ? null

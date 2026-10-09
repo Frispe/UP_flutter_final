@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/api_client.dart';
@@ -22,13 +23,17 @@ import 'state/order_state.dart';
 import 'state/storage_state.dart';
 import 'state/user_state.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
+  final prefs = await SharedPreferences.getInstance();
 
   late AuthState auth;
-  final dio = buildDio(tokenProvider: () => auth.accessToken);
-  auth = AuthState(dio);
+  final dio = buildDio(
+    tokenProvider: () => auth.accessToken,
+    tokenRefresher: () => auth.refreshAccessToken(),
+  );
+  auth = AuthState(dio, prefs);
 
   runApp(
     MultiProvider(

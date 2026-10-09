@@ -5,8 +5,9 @@ import 'api_exceptions.dart';
 import 'config.dart';
 
 typedef TokenProvider = String? Function();
+typedef TokenRefresher = Future<String?> Function();
 
-Dio buildDio({TokenProvider? tokenProvider}) {
+Dio buildDio({TokenProvider? tokenProvider, TokenRefresher? tokenRefresher}) {
   final dio = Dio(
     BaseOptions(
       baseUrl: apiBaseUrl,
@@ -71,6 +72,23 @@ Dio buildDio({TokenProvider? tokenProvider}) {
         }
         final options = error.requestOptions;
         final status = error.response?.statusCode;
+        final authRequest = options.path.startsWith('/auth/');
+        final authRetried = options.extra['authRetried'] == true;
+        if (status == 401 && !authRequest && !authRetried && tokenRefresher != null) {
+          options.extra['authRetried'] = true;
+          final token = await tokenRefresher();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+            try {
+              final response = await dio.fetch<dynamic>(options);
+              handler.resolve(response);
+              return;
+            } on DioException catch (retryError) {
+              handler.next(retryError);
+              return;
+            }
+          }
+        }
         final retryable =
             options.method == 'GET' &&
             error.type != DioExceptionType.cancel &&

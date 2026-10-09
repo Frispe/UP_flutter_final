@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../state/auth_state.dart';
@@ -102,10 +103,24 @@ class _LoginScreenState extends State<LoginScreen> {
                               )
                             : const Text('Войти'),
                       ),
-                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: auth.loading
+                            ? null
+                            : () => context.go(
+                                Uri(
+                                  path: '/register',
+                                  queryParameters: GoRouterState.of(context)
+                                      .uri
+                                      .queryParameters,
+                                ).toString(),
+                              ),
+                        child: const Text('Создать аккаунт'),
+                      ),
+                      const SizedBox(height: 8),
                       const Text(
                         'Администратор: admin / admin123\n'
-                        'Менеджер: manager / manager123',
+                        'Менеджер: manager / manager123\n'
+                        'Покупатель: customer / customer123!',
                         textAlign: TextAlign.center,
                       ),
                     ],

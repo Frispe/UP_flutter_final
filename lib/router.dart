@@ -1,5 +1,11 @@
 import 'form_guard.dart';
+import 'permissions.dart';
 import 'screens/user_form.dart';
+import 'screens/login.dart';
+import 'screens/register.dart';
+import 'screens/accounts.dart';
+import 'screens/statistics.dart';
+import 'state/auth_state.dart';
 
 import 'screens/user_detail.dart';
 import 'screens/order_detail.dart';
@@ -25,8 +31,38 @@ import 'state/detail_state.dart';
 import 'state/product_state.dart';
 import 'widgets/list_route.dart';
 
-final router = GoRouter(
+GoRouter createRouter(AuthState auth) => GoRouter(
+  refreshListenable: auth,
+  redirect: (context, state) {
+    final authPage = state.uri.path == '/login' || state.uri.path == '/register';
+    if (!auth.signedIn && !authPage) {
+      return Uri(path: '/login', queryParameters: {'from': state.uri.toString()}).toString();
+    }
+    if (auth.signedIn && authPage) {
+      final from = state.uri.queryParameters['from'];
+      return from != null && from.startsWith('/') ? from : '/products';
+    }
+    if (auth.signedIn && !AccessRules.canOpen(auth.role, state.uri.path)) {
+      return '/products';
+    }
+    return null;
+  },
   routes: [
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
+    GoRoute(path: '/accounts', builder: (context, state) => const AccountsScreen()),
+    GoRoute(path: '/statistics', builder: (context, state) => const StatisticsScreen()),
+    GoRoute(
+      path: '/cart',
+      builder: (context, state) {
+        final customerId = auth.customerId;
+        if (customerId == null) return const NotFound(location: '/cart');
+        return ChangeNotifierProvider<CartState>(
+          create: (context) => CartState(context.read<CartRepository>())..load(customerId),
+          child: UserDetail(key: ValueKey('own-cart-$customerId'), id: customerId),
+        );
+      },
+    ),
     GoRoute(path: '/orders', builder: (context, state) => const OrderList()),
     GoRoute(
       path: '/orders/:id',

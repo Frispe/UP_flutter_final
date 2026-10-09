@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../models/query.dart';
 import '../models/page_result.dart';
 import '../state/status.dart';
+import '../state/auth_state.dart';
 import '../query_url.dart';
 import 'entity_table.dart';
 import 'pagination.dart';
@@ -73,6 +75,7 @@ class CatalogList<T> extends StatelessWidget {
       );
     }
 
+    final isAdmin = context.watch<AuthState>().role == 'admin';
     final users = path == '/users';
     final filter = users ? query.hasCartItems : query.hasProducts;
     final pager = Pagination(
@@ -133,19 +136,20 @@ class CatalogList<T> extends StatelessWidget {
                           ),
                   ),
           ),
-          Row(
-            children: [
-              Checkbox(
-                value: query.includeDeleted,
-                onChanged: saving
-                    ? null
-                    : (value) => onQueryChanged(
-                        query.copyWith(includeDeleted: value ?? false),
-                      ),
-              ),
-              const Flexible(child: Text('Показывать удалённые')),
-            ],
-          ),
+          if (isAdmin)
+            Row(
+              children: [
+                Checkbox(
+                  value: query.includeDeleted,
+                  onChanged: saving
+                      ? null
+                      : (value) => onQueryChanged(
+                          query.copyWith(includeDeleted: value ?? false),
+                        ),
+                ),
+                const Flexible(child: Text('Показывать удалённые')),
+              ],
+            ),
           if (status == LoadStatus.success)
             Wrap(
               spacing: 12,
@@ -224,7 +228,7 @@ class CatalogList<T> extends StatelessWidget {
                             ),
                       child: const Text('Удалить'),
                     ),
-                  ] else ...[
+                  ] else if (isAdmin) ...[
                     TextButton(
                       onPressed: saving
                           ? null
