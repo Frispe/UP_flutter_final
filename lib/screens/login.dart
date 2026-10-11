@@ -117,13 +117,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                         child: const Text('Создать аккаунт'),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Администратор: admin / admin123\n'
-                        'Менеджер: manager / manager123\n'
-                        'Покупатель: customer / customer123!',
-                        textAlign: TextAlign.center,
-                      ),
                     ],
                   ),
                 ),
