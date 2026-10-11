@@ -132,7 +132,7 @@ class _Banner extends StatelessWidget {
           colors: [Color(0xFF173A73), Color(0xFF4D2A9B), Color(0xFF171925)],
         ),
         image: const DecorationImage(
-          image: AssetImage('assets/images/banner.png'),
+          image: AssetImage('assets/images/banner.jpg'),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(Color(0x55000000), BlendMode.darken),
         ),
