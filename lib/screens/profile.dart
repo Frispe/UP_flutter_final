@@ -70,9 +70,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ShopPage(
       title: 'Профиль',
       child: switch (_status) {
-        LoadStatus.idle || LoadStatus.loading => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        LoadStatus.idle ||
+        LoadStatus.loading => const Center(child: CircularProgressIndicator()),
         LoadStatus.error => StatusView(
           message: _error ?? 'Не удалось загрузить профиль',
           onRetry: _load,

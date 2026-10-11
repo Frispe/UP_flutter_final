@@ -71,7 +71,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Сервер недоступен. Проверьте соединение.'), findsOneWidget);
+    expect(
+      find.text('Сервер недоступен. Проверьте соединение.'),
+      findsOneWidget,
+    );
     expect(find.text('Повторить'), findsOneWidget);
 
     await tester.tap(find.text('Повторить'));

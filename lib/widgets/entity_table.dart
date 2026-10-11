@@ -151,9 +151,7 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
                                 contentPadding: EdgeInsets.zero,
                                 controlAffinity:
                                     ListTileControlAffinity.leading,
-                                title: Text(
-                                  'Запись № ${widget.idOf(item)}',
-                                ),
+                                title: Text('Запись № ${widget.idOf(item)}'),
                                 value: widget.selected.contains(
                                   widget.idOf(item),
                                 ),
@@ -173,9 +171,9 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
                                   children: [
                                     Text(
                                       column.label,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.labelMedium,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium,
                                     ),
                                     const SizedBox(height: 2),
                                     column.build(item),

@@ -128,32 +128,32 @@ class _OrderDetailState extends State<OrderDetail> {
                   children: [
                     SizedBox(
                       width: compact ? constraints.maxWidth : 220,
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _selectedStatus,
-                    decoration: const InputDecoration(
-                      labelText: 'Статус',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [
-                      for (final value in [
-                        'new',
-                        'paid',
-                        'completed',
-                        'cancelled',
-                      ])
-                        DropdownMenuItem(
-                          value: value,
-                          child: Text(orderStatusName(value)),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _selectedStatus,
+                        decoration: const InputDecoration(
+                          labelText: 'Статус',
+                          border: OutlineInputBorder(),
                         ),
-                    ],
-                    onChanged: state.saving
-                        ? null
-                        : (value) => setState(() => _selectedStatus = value),
-                  ),
+                        items: [
+                          for (final value in [
+                            'new',
+                            'paid',
+                            'completed',
+                            'cancelled',
+                          ])
+                            DropdownMenuItem(
+                              value: value,
+                              child: Text(orderStatusName(value)),
+                            ),
+                        ],
+                        onChanged: state.saving
+                            ? null
+                            : (value) =>
+                                  setState(() => _selectedStatus = value),
+                      ),
                     ),
                     FilledButton(
-                      onPressed:
-                          state.saving || _selectedStatus == order.status
+                      onPressed: state.saving || _selectedStatus == order.status
                           ? null
                           : _saveStatus,
                       child: const Text('Сохранить статус'),

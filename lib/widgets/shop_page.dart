@@ -54,11 +54,7 @@ class ShopPage extends StatelessWidget {
                     ],
                   ),
                 Expanded(
-                  child: Semantics(
-                    container: true,
-                    label: title,
-                    child: child,
-                  ),
+                  child: Semantics(container: true, label: title, child: child),
                 ),
               ],
             ),
@@ -141,8 +137,7 @@ class ShopPage extends StatelessWidget {
                     links: links,
                     selected: selected,
                     extended: expanded,
-                    onSelected: (index) =>
-                        context.go(links[index].path),
+                    onSelected: (index) => context.go(links[index].path),
                   ),
                   const VerticalDivider(width: 1),
                   Expanded(child: content()),
@@ -156,23 +151,83 @@ class ShopPage extends StatelessWidget {
     if (role == 'customer') {
       return const [
         _NavigationLink('/home', 'Главная', Icons.home_outlined, Icons.home),
-        _NavigationLink('/catalog', 'Каталог', Icons.store_outlined, Icons.store),
-        _NavigationLink('/cart', 'Корзина', Icons.shopping_cart_outlined, Icons.shopping_cart),
-        _NavigationLink('/profile', 'Профиль', Icons.person_outline, Icons.person),
+        _NavigationLink(
+          '/catalog',
+          'Каталог',
+          Icons.store_outlined,
+          Icons.store,
+        ),
+        _NavigationLink(
+          '/cart',
+          'Корзина',
+          Icons.shopping_cart_outlined,
+          Icons.shopping_cart,
+        ),
+        _NavigationLink(
+          '/profile',
+          'Профиль',
+          Icons.person_outline,
+          Icons.person,
+        ),
       ];
     }
     return [
-      const _NavigationLink('/home', 'Главная', Icons.home_outlined, Icons.home),
-      const _NavigationLink('/products', 'Товары', Icons.store_outlined, Icons.store),
-      const _NavigationLink('/brands', 'Бренды', Icons.sell_outlined, Icons.sell),
-      const _NavigationLink('/categories', 'Категории', Icons.category_outlined, Icons.category),
-      const _NavigationLink('/platforms', 'Платформы', Icons.devices_outlined, Icons.devices),
-      const _NavigationLink('/users', 'Пользователи', Icons.people_outline, Icons.people),
-      const _NavigationLink('/orders', 'Заказы', Icons.receipt_long_outlined, Icons.receipt_long),
+      const _NavigationLink(
+        '/home',
+        'Главная',
+        Icons.home_outlined,
+        Icons.home,
+      ),
+      const _NavigationLink(
+        '/products',
+        'Товары',
+        Icons.store_outlined,
+        Icons.store,
+      ),
+      const _NavigationLink(
+        '/brands',
+        'Бренды',
+        Icons.sell_outlined,
+        Icons.sell,
+      ),
+      const _NavigationLink(
+        '/categories',
+        'Категории',
+        Icons.category_outlined,
+        Icons.category,
+      ),
+      const _NavigationLink(
+        '/platforms',
+        'Платформы',
+        Icons.devices_outlined,
+        Icons.devices,
+      ),
+      const _NavigationLink(
+        '/users',
+        'Пользователи',
+        Icons.people_outline,
+        Icons.people,
+      ),
+      const _NavigationLink(
+        '/orders',
+        'Заказы',
+        Icons.receipt_long_outlined,
+        Icons.receipt_long,
+      ),
       if (role == 'admin')
-        const _NavigationLink('/accounts', 'Аккаунты', Icons.manage_accounts_outlined, Icons.manage_accounts),
+        const _NavigationLink(
+          '/accounts',
+          'Аккаунты',
+          Icons.manage_accounts_outlined,
+          Icons.manage_accounts,
+        ),
       if (role == 'admin')
-        const _NavigationLink('/statistics', 'Статистика', Icons.bar_chart_outlined, Icons.bar_chart),
+        const _NavigationLink(
+          '/statistics',
+          'Статистика',
+          Icons.bar_chart_outlined,
+          Icons.bar_chart,
+        ),
     ];
   }
 
@@ -184,7 +239,11 @@ class ShopPage extends StatelessWidget {
 }
 
 class _BottomNavigation extends StatelessWidget {
-  const _BottomNavigation({required this.links, required this.selected, required this.onSelected});
+  const _BottomNavigation({
+    required this.links,
+    required this.selected,
+    required this.onSelected,
+  });
 
   final List<_NavigationLink> links;
   final int selected;
@@ -218,7 +277,9 @@ class _BottomNavigation extends StatelessWidget {
                       children: [
                         Icon(
                           active ? link.selectedIcon : link.icon,
-                          color: active ? Theme.of(context).colorScheme.primary : null,
+                          color: active
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
                         ),
                         const SizedBox(height: 3),
                         Text(
@@ -300,9 +361,7 @@ class _SideNavigation extends StatelessWidget {
             selected: active,
             button: true,
             label: link.label,
-            child: extended
-                ? tile
-                : Tooltip(message: link.label, child: tile),
+            child: extended ? tile : Tooltip(message: link.label, child: tile),
           );
         },
       ),

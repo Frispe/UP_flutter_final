@@ -12,16 +12,19 @@ class StatusView extends StatelessWidget {
       liveRegion: true,
       child: Center(
         child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message, textAlign: TextAlign.center),
-            if (onRetry != null) ...[
-              const SizedBox(height: 16),
-              FilledButton(onPressed: onRetry, child: const Text('Повторить')),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(message, textAlign: TextAlign.center),
+              if (onRetry != null) ...[
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: onRetry,
+                  child: const Text('Повторить'),
+                ),
+              ],
             ],
-          ],
           ),
         ),
       ),

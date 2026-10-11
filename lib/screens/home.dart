@@ -53,9 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return ShopPage(
       title: 'Главная',
       child: switch (_status) {
-        LoadStatus.idle || LoadStatus.loading => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        LoadStatus.idle ||
+        LoadStatus.loading => const Center(child: CircularProgressIndicator()),
         LoadStatus.error => StatusView(
           message: _error ?? 'Не удалось загрузить главную страницу',
           onRetry: _load,
@@ -135,10 +134,7 @@ class _Banner extends StatelessWidget {
         image: const DecorationImage(
           image: AssetImage('assets/images/banner.png'),
           fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Color(0x55000000),
-            BlendMode.darken,
-          ),
+          colorFilter: ColorFilter.mode(Color(0x55000000), BlendMode.darken),
         ),
       ),
       child: Align(
@@ -159,10 +155,8 @@ class _Banner extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 'Игровые ключи и подписки на нейросети для разных платформ и регионов.',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFFD8D9E4),
-                  height: 1.4,
-                ),
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(color: const Color(0xFFD8D9E4), height: 1.4),
               ),
               const SizedBox(height: 24),
               FilledButton.icon(
@@ -195,16 +189,17 @@ class _Feature extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           child: Row(
             children: [
-              Icon(icon, size: 32, color: Theme.of(context).colorScheme.primary),
+              Icon(
+                icon,
+                size: 32,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 4),
                     Text(text, style: Theme.of(context).textTheme.bodySmall),
                   ],

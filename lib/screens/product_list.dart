@@ -253,8 +253,7 @@ class ProductList extends StatelessWidget {
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child:
-                        MediaQuery.sizeOf(context).width < 600 || shortHeight
+                    child: MediaQuery.sizeOf(context).width < 600 || shortHeight
                         ? ExpansionTile(
                             title: const Text('Поиск и фильтры'),
                             maintainState: true,

@@ -354,9 +354,7 @@ class _UserDetailState extends State<UserDetail> {
                         enabled && data.items.isNotEmpty && !orders.saving
                         ? _checkout
                         : null,
-                    child: Text(
-                      orders.saving ? 'Оформление…' : 'Заказать',
-                    ),
+                    child: Text(orders.saving ? 'Оформление…' : 'Заказать'),
                   ),
                   TextButton(
                     onPressed: enabled && data.items.isNotEmpty ? _clear : null,
@@ -411,9 +409,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
   }
 
   String? _expiryValidator(String? value) {
-    final match = RegExp(r'^(0[1-9]|1[0-2])/(\d{2})$').firstMatch(
-      value?.trim() ?? '',
-    );
+    final match = RegExp(r'^(0[1-9]|1[0-2])/(\d{2})$')
+        .firstMatch(value?.trim() ?? '');
     if (match == null) {
       return 'Введите срок в формате ММ/ГГ';
     }
@@ -468,9 +465,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         controller: _expiry,
                         keyboardType: TextInputType.datetime,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[0-9/]'),
-                          ),
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9/]')),
                           LengthLimitingTextInputFormatter(5),
                         ],
                         decoration: const InputDecoration(
@@ -497,9 +492,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                           labelText: 'CVV',
                           hintText: '000',
                         ),
-                        validator: (value) => RegExp(
-                          r'^\d{3}$',
-                        ).hasMatch(value ?? '')
+                        validator: (value) =>
+                            RegExp(r'^\d{3}$').hasMatch(value ?? '')
                             ? null
                             : 'Введите 3 цифры',
                       ),
