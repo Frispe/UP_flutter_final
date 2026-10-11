@@ -33,6 +33,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _load() async {
     final id = context.read<AuthState>().customerId;
+    final users = context.read<UserRepository>();
+    final ordersRepository = context.read<ApiOrderRepository>();
     if (id == null) {
       setState(() {
         _error = 'Профиль покупателя недоступен';
@@ -45,11 +47,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _error = null;
     });
     try {
-      final user = await context.read<UserRepository>().findById(id);
-      final orders = await context.read<ApiOrderRepository>().find(
-        size: 50,
-        userId: id,
-      );
+      final user = await users.findById(id);
+      final orders = await ordersRepository.find(size: 50, userId: id);
       if (!mounted) return;
       setState(() {
         _user = user;
