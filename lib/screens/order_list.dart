@@ -44,14 +44,50 @@ class _OrderListState extends State<OrderList> {
               itemBuilder: (context, index) {
                 final order = state.result.items[index];
                 return Card(
-                  child: ListTile(
-                    onTap: () => context.go('/orders/${order.id}'),
-                    title: Text('Заказ № ${order.id}'),
-                    subtitle: Text(
-                      '${state.userNames[order.userId] ?? 'Пользователь № ${order.userId}'} · '
-                      '${formatDate(order.orderedAt)} · ${orderStatusName(order.status)}',
-                    ),
-                    trailing: Text(formatPrice(order.totalPrice)),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final compact = constraints.maxWidth < 520;
+                      if (!compact) {
+                        return ListTile(
+                          onTap: () => context.go('/orders/${order.id}'),
+                          title: Text('Заказ № ${order.id}'),
+                          subtitle: Text(
+                            '${state.userNames[order.userId] ?? 'Пользователь № ${order.userId}'} · '
+                            '${formatDate(order.orderedAt)} · ${orderStatusName(order.status)}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Text(formatPrice(order.totalPrice)),
+                        );
+                      }
+                      return InkWell(
+                        onTap: () => context.go('/orders/${order.id}'),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Заказ № ${order.id}',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                state.userNames[order.userId] ??
+                                    'Пользователь № ${order.userId}',
+                              ),
+                              Text(formatDate(order.orderedAt)),
+                              Text(orderStatusName(order.status)),
+                              const SizedBox(height: 8),
+                              Text(
+                                formatPrice(order.totalPrice),
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },

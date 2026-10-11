@@ -27,39 +27,49 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Future<void> _load() async {
     setState(() => _error = null);
     try {
-      final response = await guard(() => context.read<Dio>().get('/statistics'));
+      final response = await guard(
+        () => context.read<Dio>().get('/statistics'),
+      );
       if (!mounted) return;
       setState(() => _data = Map<String, dynamic>.from(response.data as Map));
     } catch (exception) {
       if (!mounted) return;
-      setState(() => _error = exception is ApiException ? exception.message : '$exception');
+      setState(
+        () => _error = exception is ApiException
+            ? exception.message
+            : '$exception',
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final data = _data;
-    final roles = data == null ? const <String, dynamic>{} : Map<String, dynamic>.from(data['roles'] as Map);
+    final roles = data == null
+        ? const <String, dynamic>{}
+        : Map<String, dynamic>.from(data['roles'] as Map);
     return ShopPage(
       title: 'Статистика',
       child: _error != null
           ? StatusView(message: _error!, onRetry: _load)
           : data == null
           ? const Center(child: CircularProgressIndicator())
-          : GridView.count(
-              crossAxisCount: MediaQuery.sizeOf(context).width < 700 ? 2 : 4,
-              childAspectRatio: 1.7,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              children: [
-                _card('Товаров', '${data['products']}'),
-                _card('Пользователей', '${data['customers']}'),
-                _card('Заказов', '${data['orders']}'),
-                _card('Выручка', formatPrice(data['revenue'] as int? ?? 0)),
-                _card('Покупателей', '${roles['customer'] ?? 0}'),
-                _card('Менеджеров', '${roles['manager'] ?? 0}'),
-                _card('Администраторов', '${roles['admin'] ?? 0}'),
-              ],
+          : LayoutBuilder(
+              builder: (context, constraints) => GridView.extent(
+                maxCrossAxisExtent: 280,
+                childAspectRatio: constraints.maxWidth < 500 ? 2.3 : 1.7,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                children: [
+                  _card('Товаров', '${data['products']}'),
+                  _card('Пользователей', '${data['customers']}'),
+                  _card('Заказов', '${data['orders']}'),
+                  _card('Выручка', formatPrice(data['revenue'] as int? ?? 0)),
+                  _card('Покупателей', '${roles['customer'] ?? 0}'),
+                  _card('Менеджеров', '${roles['manager'] ?? 0}'),
+                  _card('Администраторов', '${roles['admin'] ?? 0}'),
+                ],
+              ),
             ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -112,6 +113,11 @@ class _UserDetailState extends State<UserDetail> {
     final cart = context.read<CartState>();
     final data = cart.data;
     if (data == null || data.items.isEmpty) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => _CheckoutDialog(email: _user?.email ?? ''),
+    );
+    if (confirmed != true || !mounted) return;
     final orders = context.read<OrderState>();
     final order = await orders.checkout(data.cart.id);
     if (!mounted) return;
@@ -158,16 +164,16 @@ class _UserDetailState extends State<UserDetail> {
             children: [
               if (!isCustomer)
                 TextButton(
-                onPressed: () => context.go(
-                  Uri(
-                    path: '/users',
-                    queryParameters: GoRouterState.of(context)
-                        .uri
-                        .queryParameters,
-                  ).toString(),
+                  onPressed: () => context.go(
+                    Uri(
+                      path: '/users',
+                      queryParameters: GoRouterState.of(context)
+                          .uri
+                          .queryParameters,
+                    ).toString(),
+                  ),
+                  child: const Text('К пользователям'),
                 ),
-                child: const Text('К пользователям'),
-              ),
               if (!isCustomer && !user.isDeleted)
                 TextButton(
                   onPressed: cart.saving
@@ -177,10 +183,13 @@ class _UserDetailState extends State<UserDetail> {
                 ),
             ],
           ),
-          Text('Почта: ${user.email}'),
-          Text(
-            'Никнейм: ${user.nickname.isEmpty ? 'не указан' : user.nickname}',
-          ),
+          if (!isCustomer) ...[
+            Text('ФИО: ${user.name}'),
+            Text('Почта: ${user.email}'),
+            Text(
+              'Никнейм: ${user.nickname.isEmpty ? 'не указан' : user.nickname}',
+            ),
+          ],
           if (user.isDeleted)
             const Text(
               'Пользователь удалён. Корзина доступна только для просмотра.',
@@ -198,7 +207,7 @@ class _UserDetailState extends State<UserDetail> {
             ),
           ],
           if (data != null) ...[
-            if (!user.isDeleted)
+            if (!user.isDeleted && !isCustomer)
               Form(
                 key: _form,
                 child: Column(
@@ -346,7 +355,7 @@ class _UserDetailState extends State<UserDetail> {
                         ? _checkout
                         : null,
                     child: Text(
-                      orders.saving ? 'Оформление…' : 'Оформить заказ',
+                      orders.saving ? 'Оформление…' : 'Заказать',
                     ),
                   ),
                   TextButton(
@@ -359,6 +368,172 @@ class _UserDetailState extends State<UserDetail> {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _CheckoutDialog extends StatefulWidget {
+  const _CheckoutDialog({required this.email});
+
+  final String email;
+
+  @override
+  State<_CheckoutDialog> createState() => _CheckoutDialogState();
+}
+
+class _CheckoutDialogState extends State<_CheckoutDialog> {
+  final _form = GlobalKey<FormState>();
+  final _card = TextEditingController();
+  final _expiry = TextEditingController();
+  final _cvv = TextEditingController();
+  late final TextEditingController _email;
+
+  @override
+  void initState() {
+    super.initState();
+    _email = TextEditingController(text: widget.email);
+  }
+
+  @override
+  void dispose() {
+    _card.dispose();
+    _expiry.dispose();
+    _cvv.dispose();
+    _email.dispose();
+    super.dispose();
+  }
+
+  String? _cardValidator(String? value) {
+    if (!RegExp(r'^\d{16}$').hasMatch(value?.trim() ?? '')) {
+      return 'Введите 16 цифр номера карты';
+    }
+    return null;
+  }
+
+  String? _expiryValidator(String? value) {
+    final match = RegExp(r'^(0[1-9]|1[0-2])/(\d{2})$').firstMatch(
+      value?.trim() ?? '',
+    );
+    if (match == null) {
+      return 'Введите срок в формате ММ/ГГ';
+    }
+    final month = int.parse(match.group(1)!);
+    final year = 2000 + int.parse(match.group(2)!);
+    final now = DateTime.now();
+    if (year < now.year || (year == now.year && month < now.month)) {
+      return 'Срок действия карты истёк';
+    }
+    return null;
+  }
+
+  void _submit() {
+    if (_form.currentState!.validate()) {
+      Navigator.pop(context, true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Оформление заказа'),
+      content: SizedBox(
+        width: 480,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _form,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _card,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  autofillHints: const [AutofillHints.creditCardNumber],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(16),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'Номер карты',
+                    hintText: '0000000000000000',
+                  ),
+                  validator: _cardValidator,
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _expiry,
+                        keyboardType: TextInputType.datetime,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9/]'),
+                          ),
+                          LengthLimitingTextInputFormatter(5),
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'ММ/ГГ',
+                          hintText: '12/28',
+                        ),
+                        validator: _expiryValidator,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _cvv,
+                        keyboardType: TextInputType.number,
+                        obscureText: true,
+                        autofillHints: const [
+                          AutofillHints.creditCardSecurityCode,
+                        ],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(3),
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'CVV',
+                          hintText: '000',
+                        ),
+                        validator: (value) => RegExp(
+                          r'^\d{3}$',
+                        ).hasMatch(value ?? '')
+                            ? null
+                            : 'Введите 3 цифры',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [AutofillHints.email],
+                  decoration: const InputDecoration(
+                    labelText: 'Почта для получения товаров',
+                    helperText: 'На эту почту придут приобретённые товары',
+                    helperMaxLines: 2,
+                  ),
+                  validator: Validators.email,
+                  onFieldSubmitted: (_) => _submit(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Отмена'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Подтвердить заказ'),
+        ),
+      ],
     );
   }
 }

@@ -186,6 +186,7 @@ class MemoryProductRepository implements ProductRepository {
       categoryIds: List.unmodifiable(product.categoryIds),
       region: product.region.trim(),
       durationMonths: product.durationMonths,
+      imageUrl: product.imageUrl,
     );
     _store.products.add(created);
     return created;

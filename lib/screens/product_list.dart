@@ -16,6 +16,7 @@ import '../state/auth_state.dart';
 import '../state/status.dart';
 import '../widgets/shop_page.dart';
 import '../widgets/status_view.dart';
+import '../widgets/product_image.dart';
 
 class ProductList extends StatelessWidget {
   const ProductList({super.key, required this.onQueryChanged});
@@ -111,7 +112,9 @@ class ProductList extends StatelessWidget {
               items: state.result.items,
               idOf: (item) => item.id,
               selected: state.selected,
-              onToggleSelect: !canManage || state.saving ? null : state.toggleSelection,
+              onToggleSelect: !canManage || state.saving
+                  ? null
+                  : state.toggleSelection,
               onSelectAll: !canManage || state.saving ? null : state.selectAll,
               canSelect: (item) => !item.isDeleted,
               sortField: state.query.sortField,
@@ -127,6 +130,15 @@ class ProductList extends StatelessWidget {
                       );
                     },
               columns: [
+                TableColumnSpec(
+                  label: 'Фото',
+                  build: (item) => ProductImage(
+                    imageUrl: item.imageUrl,
+                    width: 72,
+                    height: 52,
+                    borderRadius: 8,
+                  ),
+                ),
                 TableColumnSpec(
                   label: 'Название',
                   sortField: 'name',
@@ -220,19 +232,20 @@ class ProductList extends StatelessWidget {
       title: 'Каталог товаров',
       child: LayoutBuilder(
         builder: (context, constraints) {
+          final shortHeight = constraints.maxHeight < 520;
           return Column(
             children: [
               if (canManage)
                 Align(
-                alignment: Alignment.centerLeft,
-                child: FilledButton(
-                  onPressed: state.saving
-                      ? null
-                      : () => context.go('/products/new'),
-                  child: const Text('Добавить товар'),
+                  alignment: Alignment.centerLeft,
+                  child: FilledButton(
+                    onPressed: state.saving
+                        ? null
+                        : () => context.go('/products/new'),
+                    child: const Text('Добавить товар'),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
+              SizedBox(height: shortHeight ? 4 : 8),
               ConstrainedBox(
                 constraints: BoxConstraints(
                   maxHeight: constraints.maxHeight * 0.55,
@@ -240,7 +253,8 @@ class ProductList extends StatelessWidget {
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: MediaQuery.sizeOf(context).width < 600
+                    child:
+                        MediaQuery.sizeOf(context).width < 600 || shortHeight
                         ? ExpansionTile(
                             title: const Text('Поиск и фильтры'),
                             maintainState: true,
@@ -258,7 +272,7 @@ class ProductList extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: shortHeight ? 4 : 16),
               if (isAdmin) deletedSwitch,
               Expanded(child: content),
             ],

@@ -6,6 +6,9 @@ class AccessRules {
     }
     if (role != 'customer') return false;
     return path == '/' ||
+        path == '/home' ||
+        path == '/catalog' ||
+        path == '/profile' ||
         path == '/products' ||
         RegExp(r'^/products/\d+$').hasMatch(path) ||
         path == '/cart' ||

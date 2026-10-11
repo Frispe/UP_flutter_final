@@ -118,56 +118,82 @@ class _OrderDetailState extends State<OrderDetail> {
           Text('Итого: ${formatPrice(order.totalPrice)}'),
           const SizedBox(height: 16),
           if (canManage)
-            Row(
-            children: [
-              SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<String>(
-                  initialValue: _selectedStatus,
-                  decoration: const InputDecoration(
-                    labelText: 'Статус',
-                    border: OutlineInputBorder(),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 520;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: compact ? constraints.maxWidth : 220,
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _selectedStatus,
+                    decoration: const InputDecoration(
+                      labelText: 'Статус',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      for (final value in [
+                        'new',
+                        'paid',
+                        'completed',
+                        'cancelled',
+                      ])
+                        DropdownMenuItem(
+                          value: value,
+                          child: Text(orderStatusName(value)),
+                        ),
+                    ],
+                    onChanged: state.saving
+                        ? null
+                        : (value) => setState(() => _selectedStatus = value),
                   ),
-                  items: [
-                    for (final value in [
-                      'new',
-                      'paid',
-                      'completed',
-                      'cancelled',
-                    ])
-                      DropdownMenuItem(
-                        value: value,
-                        child: Text(orderStatusName(value)),
-                      ),
+                    ),
+                    FilledButton(
+                      onPressed:
+                          state.saving || _selectedStatus == order.status
+                          ? null
+                          : _saveStatus,
+                      child: const Text('Сохранить статус'),
+                    ),
                   ],
-                  onChanged: state.saving
-                      ? null
-                      : (value) => setState(() => _selectedStatus = value),
-                ),
-              ),
-              const SizedBox(width: 12),
-              FilledButton(
-                onPressed: state.saving || _selectedStatus == order.status
-                    ? null
-                    : _saveStatus,
-                child: const Text('Сохранить статус'),
-              ),
-            ],
-          ),
+                );
+              },
+            ),
           const SizedBox(height: 24),
           Text('Состав заказа', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           for (final item in _items)
             Card(
-              child: ListTile(
-                title: Text(
-                  _products[item.productId]?.name ??
-                      'Товар № ${item.productId}',
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.spaceBetween,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _products[item.productId]?.name ??
+                                'Товар № ${item.productId}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            '${item.quantity} шт. × ${formatPrice(item.price)}',
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(formatPrice(item.totalPrice)),
+                  ],
                 ),
-                subtitle: Text(
-                  '${item.quantity} шт. × ${formatPrice(item.price)}',
-                ),
-                trailing: Text(formatPrice(item.totalPrice)),
               ),
             ),
         ],

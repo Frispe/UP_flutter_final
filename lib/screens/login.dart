@@ -58,6 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 24),
                       TextFormField(
                         controller: _login,
+                        autofocus: true,
                         enabled: !auth.loading,
                         decoration: const InputDecoration(
                           labelText: 'Логин',

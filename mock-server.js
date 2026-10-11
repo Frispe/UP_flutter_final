@@ -11,10 +11,11 @@ function arg(name, fallback) {
   return index !== -1 && args[index + 1] ? args[index + 1] : fallback;
 }
 
-const PORT = Number(arg('port', 8080));
-const ORIGIN = arg('origin', '*');
-const SECRET = 'digital-shop-study-secret';
-const ACCESS_TTL = Number(arg('ttl', 900));
+const PORT = Number(process.env.PORT || arg('port', 8080));
+const HOST = process.env.HOST || '0.0.0.0';
+const ORIGIN = process.env.CORS_ORIGIN || arg('origin', '*');
+const SECRET = process.env.JWT_SECRET || 'digital-shop-study-secret';
+const ACCESS_TTL = Number(process.env.ACCESS_TTL || arg('ttl', 900));
 const REFRESH_TTL = 60 * 60 * 24 * 7;
 
 let db;
@@ -415,6 +416,12 @@ function validate(collection, body, id = null) {
       const duration = Number(body.durationMonths);
       if (!Number.isInteger(duration) || duration <= 0) errors.durationMonths = 'Укажите срок подписки';
     }
+    const imageUrl = text(body.imageUrl);
+    if (imageUrl && !/^data:image\/(jpeg|png|webp);base64,/.test(imageUrl) && !/^https?:\/\//.test(imageUrl)) {
+      errors.imageUrl = 'Некорректный формат изображения';
+    } else if (imageUrl.length > 3000000) {
+      errors.imageUrl = 'Размер изображения слишком большой';
+    }
   }
   if (collection === 'customers') {
     if (!text(body.name)) errors.name = 'Укажите имя пользователя';
@@ -468,6 +475,7 @@ function normalize(collection, body) {
     categoryIds: ids(body.categoryIds),
     region: text(body.region),
     durationMonths: body.type === 'aiSubscription' ? number(body.durationMonths) : null,
+    imageUrl: text(body.imageUrl) || null,
   };
   if (collection === 'customers') return { name: text(body.name), email: text(body.email), nickname: text(body.nickname) };
   if (collection === 'carts') return { customerId: number(body.customerId) };
@@ -751,10 +759,10 @@ const server = http.createServer(async (req, res) => {
   console.log(`${req.method.padEnd(6)} ${url.pathname}${url.search} -> ${res.statusCode} ${Date.now() - startedAt} ms`);
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   console.log('');
   console.log('Учебное API «Магазин цифровых товаров»');
-  console.log(`Адрес: http://localhost:${PORT}/api`);
+  console.log(`Адрес: http://${HOST}:${PORT}/api`);
   console.log(`Разрешённый источник: ${ORIGIN}`);
   console.log('Учётные записи: admin/admin123, manager/manager123, customer/customer123!');
   console.log('');

@@ -108,68 +108,95 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
         ],
         if (widget.onToggleSelect != null)
           CheckboxListTile(
-          contentPadding: EdgeInsets.zero,
-          controlAffinity: ListTileControlAffinity.leading,
-          title: const Text('Выбрать все на странице'),
-          tristate: true,
-          value: selectedCount == 0
-              ? false
-              : selectedCount == selectable.length
-              ? true
-              : null,
-          onChanged: widget.onSelectAll == null || selectable.isEmpty
-              ? null
-              : (_) => widget.onSelectAll!(selectedCount != selectable.length),
-        ),
-        for (final item in widget.items)
-          Card(
-            key: ValueKey(widget.idOf(item)),
-            margin: const EdgeInsets.only(bottom: 12),
-            color: widget.selected.contains(widget.idOf(item))
-                ? Theme.of(context).colorScheme.secondaryContainer
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text('Выбрать все на странице'),
+            tristate: true,
+            value: selectedCount == 0
+                ? false
+                : selectedCount == selectable.length
+                ? true
                 : null,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (widget.onToggleSelect != null)
-                    CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    title: Text('Запись № ${widget.idOf(item)}'),
-                    value: widget.selected.contains(widget.idOf(item)),
-                    onChanged:
-                        widget.onToggleSelect == null ||
-                            !(widget.canSelect?.call(item) ?? true)
-                        ? null
-                        : (_) => widget.onToggleSelect!(widget.idOf(item)),
-                  ),
-                  for (final column in widget.columns)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            column.label,
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
-                          const SizedBox(height: 2),
-                          column.build(item),
-                        ],
+            onChanged: widget.onSelectAll == null || selectable.isEmpty
+                ? null
+                : (_) =>
+                      widget.onSelectAll!(selectedCount != selectable.length),
+          ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 580 ? 2 : 1;
+            final cardWidth = columns == 1
+                ? constraints.maxWidth
+                : (constraints.maxWidth - 12) / 2;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final item in widget.items)
+                  SizedBox(
+                    width: cardWidth,
+                    child: Card(
+                      key: ValueKey(widget.idOf(item)),
+                      margin: EdgeInsets.zero,
+                      color: widget.selected.contains(widget.idOf(item))
+                          ? Theme.of(context).colorScheme.secondaryContainer
+                          : null,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (widget.onToggleSelect != null)
+                              CheckboxListTile(
+                                contentPadding: EdgeInsets.zero,
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                                title: Text(
+                                  'Запись № ${widget.idOf(item)}',
+                                ),
+                                value: widget.selected.contains(
+                                  widget.idOf(item),
+                                ),
+                                onChanged:
+                                    widget.onToggleSelect == null ||
+                                        !(widget.canSelect?.call(item) ?? true)
+                                    ? null
+                                    : (_) => widget.onToggleSelect!(
+                                        widget.idOf(item),
+                                      ),
+                              ),
+                            for (final column in widget.columns)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      column.label,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.labelMedium,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    column.build(item),
+                                  ],
+                                ),
+                              ),
+                            if (widget.actions != null)
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: widget.actions!(item),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  if (widget.actions != null)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.actions!(item),
-                    ),
-                ],
-              ),
-            ),
-          ),
+                  ),
+              ],
+            );
+          },
+        ),
       ],
     );
   }
@@ -183,7 +210,7 @@ class _EntityTableState<T> extends State<EntityTable<T>> {
           );
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (MediaQuery.sizeOf(context).width < 600) return _cards(context);
+        if (MediaQuery.sizeOf(context).width < 1100) return _cards(context);
         return Scrollbar(
           controller: _horizontal,
           thumbVisibility: true,

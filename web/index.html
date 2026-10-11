@@ -1,46 +1,129 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
+  <meta name="description" content="Digital Shop — интернет-магазин цифровых товаров">
+  <meta name="theme-color" content="#101116">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="digital_shop">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Digital Shop">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>digital_shop</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="manifest" href="manifest.json">
+
+  <title>Digital Shop</title>
+
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: #101116;
+    }
+
+    body {
+      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(76, 141, 255, 0.16), transparent 34%),
+        radial-gradient(circle at 80% 75%, rgba(114, 92, 255, 0.18), transparent 36%),
+        #101116;
+      opacity: 1;
+      transition: opacity 350ms ease;
+    }
+
+    #loading-screen.hidden {
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 32px;
+      text-align: center;
+    }
+
+    .loading-title {
+      margin: 0;
+      color: #ffffff;
+      font-size: clamp(32px, 6vw, 52px);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .loading-spinner {
+      width: 54px;
+      height: 54px;
+      box-sizing: border-box;
+      border: 5px solid rgba(255, 255, 255, 0.12);
+      border-top-color: #4c8dff;
+      border-right-color: #725cff;
+      border-radius: 50%;
+      animation: spin 850ms linear infinite;
+    }
+
+    .loading-text {
+      margin: 0;
+      color: #aeb4c4;
+      font-size: 16px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #loading-screen {
+        transition: none;
+      }
+
+      .loading-spinner {
+        animation-duration: 1800ms;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+  <div id="loading-screen" role="status" aria-live="polite" aria-label="Загрузка Digital Shop">
+    <div class="loading-content">
+      <h1 class="loading-title">Digital Shop</h1>
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <p class="loading-text">Загрузка магазина...</p>
+    </div>
+  </div>
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen === null) {
+        return;
+      }
+
+      loadingScreen.classList.add('hidden');
+      window.setTimeout(function () {
+        loadingScreen.remove();
+      }, 400);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -6,8 +6,14 @@ import 'config.dart';
 
 typedef TokenProvider = String? Function();
 typedef TokenRefresher = Future<String?> Function();
+typedef ServerCallback = void Function();
 
-Dio buildDio({TokenProvider? tokenProvider, TokenRefresher? tokenRefresher}) {
+Dio buildDio({
+  TokenProvider? tokenProvider,
+  TokenRefresher? tokenRefresher,
+  ServerCallback? onServerUnavailable,
+  ServerCallback? onServerAvailable,
+}) {
   final dio = Dio(
     BaseOptions(
       baseUrl: apiBaseUrl,
@@ -41,6 +47,7 @@ Dio buildDio({TokenProvider? tokenProvider, TokenRefresher? tokenRefresher}) {
         handler.next(options);
       },
       onResponse: (response, handler) {
+        onServerAvailable?.call();
         if (kDebugMode) {
           debugPrint(
             '[API] ${response.requestOptions.method} '
@@ -72,9 +79,16 @@ Dio buildDio({TokenProvider? tokenProvider, TokenRefresher? tokenRefresher}) {
         }
         final options = error.requestOptions;
         final status = error.response?.statusCode;
+        final networkError =
+            status == null &&
+            error.type != DioExceptionType.cancel &&
+            error.type != DioExceptionType.badResponse;
         final authRequest = options.path.startsWith('/auth/');
         final authRetried = options.extra['authRetried'] == true;
-        if (status == 401 && !authRequest && !authRetried && tokenRefresher != null) {
+        if (status == 401 &&
+            !authRequest &&
+            !authRetried &&
+            tokenRefresher != null) {
           options.extra['authRetried'] = true;
           final token = await tokenRefresher();
           if (token != null) {
@@ -91,10 +105,12 @@ Dio buildDio({TokenProvider? tokenProvider, TokenRefresher? tokenRefresher}) {
         }
         final retryable =
             options.method == 'GET' &&
+            options.extra['skipRetry'] != true &&
             error.type != DioExceptionType.cancel &&
             (status == null || status >= 500);
         final retries = options.extra['retries'] as int? ?? 0;
         if (!retryable || retries >= 2) {
+          if (networkError) onServerUnavailable?.call();
           handler.next(error);
           return;
         }

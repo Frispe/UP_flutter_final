@@ -73,8 +73,11 @@ class _AccountsScreenState extends State<AccountsScreen> {
       });
     } catch (exception) {
       if (!mounted) return;
-      final message = exception is ApiException ? exception.message : '$exception';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      final message = exception is ApiException
+          ? exception.message
+          : '$exception';
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _savingId = null);
     }
@@ -102,24 +105,70 @@ class _AccountsScreenState extends State<AccountsScreen> {
                 final id = item['id'] as int;
                 final role = item['role'] as String;
                 return Card(
-                  child: ListTile(
-                    title: Text(item['name'] as String? ?? ''),
-                    subtitle: Text('${item['username']} · ${item['email'] ?? ''}'),
-                    trailing: SizedBox(
-                      width: 190,
-                      child: DropdownButtonFormField<String>(
-                        initialValue: role,
-                        decoration: const InputDecoration(labelText: 'Роль'),
-                        items: [
-                          for (final value in ['customer', 'manager', 'admin'])
-                            DropdownMenuItem(value: value, child: Text(_roleName(value))),
-                        ],
-                        onChanged: id == currentId || _savingId == id
-                            ? null
-                            : (value) {
-                                if (value != null && value != role) _changeRole(item, value);
-                              },
-                      ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final compact = constraints.maxWidth < 520;
+                        final details = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['name'] as String? ?? '',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text(
+                              '${item['username']} · ${item['email'] ?? ''}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        );
+                        final roles = SizedBox(
+                          width: compact ? constraints.maxWidth : 190,
+                          child: DropdownButtonFormField<String>(
+                            initialValue: role,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Роль',
+                            ),
+                            items: [
+                              for (final value in [
+                                'customer',
+                                'manager',
+                                'admin',
+                              ])
+                                DropdownMenuItem(
+                                  value: value,
+                                  child: Text(_roleName(value)),
+                                ),
+                            ],
+                            onChanged: id == currentId || _savingId == id
+                                ? null
+                                : (value) {
+                                    if (value != null && value != role) {
+                                      _changeRole(item, value);
+                                    }
+                                  },
+                          ),
+                        );
+                        if (compact) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              details,
+                              const SizedBox(height: 12),
+                              roles,
+                            ],
+                          );
+                        }
+                        return Row(
+                          children: [
+                            Expanded(child: details),
+                            const SizedBox(width: 16),
+                            roles,
+                          ],
+                        );
+                      },
                     ),
                   ),
                 );

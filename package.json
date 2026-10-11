@@ -1,0 +1,12 @@
+{
+  "name": "digital-shop-mock-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Учебный mock API магазина цифровых товаров",
+  "scripts": {
+    "start": "node mock-server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

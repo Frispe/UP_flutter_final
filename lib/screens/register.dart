@@ -76,13 +76,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Создание аккаунта', style: Theme.of(context).textTheme.headlineMedium),
+                      Text(
+                        'Создание аккаунта',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
                       const SizedBox(height: 24),
                       TextFormField(
                         controller: _name,
                         enabled: !auth.loading,
                         decoration: decoration('Имя', 'name'),
-                        validator: (value) => Validators.text(value, min: 2, max: 50),
+                        validator: (value) =>
+                            Validators.text(value, min: 2, max: 50),
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -96,14 +100,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: _nickname,
                         enabled: !auth.loading,
                         decoration: decoration('Никнейм', 'nickname'),
-                        validator: (value) => Validators.text(value, min: 3, max: 50),
+                        validator: (value) =>
+                            Validators.text(value, min: 3, max: 50),
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _login,
                         enabled: !auth.loading,
                         decoration: decoration('Логин', 'username'),
-                        validator: (value) => Validators.text(value, min: 3, max: 50),
+                        validator: (value) =>
+                            Validators.text(value, min: 3, max: 50),
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -122,12 +128,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           labelText: 'Повторите пароль',
                           border: OutlineInputBorder(),
                         ),
-                        validator: (value) => value != _password.text ? 'Пароли не совпадают' : null,
+                        validator: (value) => value != _password.text
+                            ? 'Пароли не совпадают'
+                            : null,
                         onFieldSubmitted: (_) => _submit(),
                       ),
                       if (auth.error != null) ...[
                         const SizedBox(height: 16),
-                        Text(auth.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                        Text(
+                          auth.error!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
                       ],
                       const SizedBox(height: 24),
                       FilledButton(
@@ -135,7 +148,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: auth.loading
                             ? const SizedBox.square(
                                 dimension: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Зарегистрироваться'),
                       ),

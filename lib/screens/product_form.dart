@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +20,7 @@ import '../widgets/form_input.dart';
 import '../widgets/shop_form.dart';
 import '../widgets/shop_page.dart';
 import '../widgets/status_view.dart';
+import '../widgets/product_image.dart';
 
 class ProductForm extends StatefulWidget {
   const ProductForm({super.key, this.id});
@@ -39,6 +43,8 @@ class _ProductFormState extends State<ProductForm> {
   int? _brandId;
   int? _platformId;
   ProductType _type = ProductType.gameKey;
+  String? _imageUrl;
+  String? _imageError;
   bool _loading = true;
   String? _loadError;
   Map<String, String> _serverErrors = {};
@@ -90,6 +96,7 @@ class _ProductFormState extends State<ProductForm> {
         _platformId = item?.platformId;
         _categoryIds = List.of(item?.categoryIds ?? []);
         _type = item?.type ?? ProductType.gameKey;
+        _imageUrl = item?.imageUrl;
         _loading = false;
       });
     } catch (e) {
@@ -98,6 +105,57 @@ class _ProductFormState extends State<ProductForm> {
           _loadError = errorText(e);
           _loading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final file = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp'],
+    );
+    if (file == null || !mounted) {
+      return;
+    }
+    final length = await file.length();
+    if (!mounted) {
+      return;
+    }
+    if (length != null && length > 2 * 1024 * 1024) {
+      setState(
+        () => _imageError = 'Размер изображения не должен превышать 2 МБ',
+      );
+      return;
+    }
+    final extension = file.extension?.toLowerCase();
+    final mimeType = switch (extension) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      _ => null,
+    };
+    if (mimeType == null) {
+      setState(() => _imageError = 'Выберите изображение JPG, PNG или WebP');
+      return;
+    }
+    try {
+      final bytes = await file.readAsBytes();
+      if (!mounted) {
+        return;
+      }
+      if (bytes.length > 2 * 1024 * 1024) {
+        setState(
+          () => _imageError = 'Размер изображения не должен превышать 2 МБ',
+        );
+        return;
+      }
+      setState(() {
+        _imageUrl = 'data:$mimeType;base64,${base64Encode(bytes)}';
+        _imageError = null;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _imageError = 'Не удалось прочитать файл');
       }
     }
   }
@@ -129,6 +187,7 @@ class _ProductFormState extends State<ProductForm> {
       durationMonths: _type == ProductType.aiSubscription
           ? int.parse(_duration.text.trim())
           : null,
+      imageUrl: _imageUrl,
     );
     final success = widget.id == null
         ? await state.create(item)
@@ -202,6 +261,48 @@ class _ProductFormState extends State<ProductForm> {
           validator: (value) => Validators.text(value, max: 2000),
           fieldError: _serverErrors['description'],
           onChanged: (_) => _clearServerError('description'),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Изображение товара'),
+            const SizedBox(height: 8),
+            ProductImage(
+              imageUrl: _imageUrl,
+              width: double.infinity,
+              height: 220,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(Icons.upload_file),
+                  label: Text(
+                    _imageUrl == null ? 'Выбрать изображение' : 'Заменить',
+                  ),
+                ),
+                if (_imageUrl != null)
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _imageUrl = null;
+                      _imageError = null;
+                    }),
+                    child: const Text('Удалить изображение'),
+                  ),
+              ],
+            ),
+            if (_imageError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  _imageError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+          ],
         ),
         DropdownButtonFormField<ProductType>(
           initialValue: _type,

@@ -8,8 +8,10 @@ class StatusView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
+    return Semantics(
+      liveRegion: true,
+      child: Center(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -20,6 +22,7 @@ class StatusView extends StatelessWidget {
               FilledButton(onPressed: onRetry, child: const Text('Повторить')),
             ],
           ],
+          ),
         ),
       ),
     );

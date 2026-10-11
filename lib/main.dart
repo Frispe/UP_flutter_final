@@ -20,6 +20,7 @@ import 'state/category_state.dart';
 import 'state/platform_state.dart';
 import 'state/product_state.dart';
 import 'state/order_state.dart';
+import 'state/server_state.dart';
 import 'state/storage_state.dart';
 import 'state/user_state.dart';
 
@@ -29,16 +30,21 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
 
   late AuthState auth;
+  late ServerState server;
   final dio = buildDio(
     tokenProvider: () => auth.accessToken,
     tokenRefresher: () => auth.refreshAccessToken(),
+    onServerUnavailable: () => server.markUnavailable(),
+    onServerAvailable: () => server.markAvailable(),
   );
+  server = ServerState(dio);
   auth = AuthState(dio, prefs);
 
   runApp(
     MultiProvider(
       providers: [
         Provider<Dio>.value(value: dio),
+        ChangeNotifierProvider<ServerState>.value(value: server),
         ChangeNotifierProvider<AuthState>.value(value: auth),
         ChangeNotifierProvider(create: (_) => StorageState(null)),
         Provider<CartRepository>(create: (_) => ApiCartRepository(dio)),

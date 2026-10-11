@@ -15,6 +15,7 @@ class Product {
     this.categoryIds = const [],
     required this.region,
     this.durationMonths,
+    this.imageUrl,
     this.deletedAt,
   });
 
@@ -29,6 +30,7 @@ class Product {
   final List<int> categoryIds;
   final String region;
   final int? durationMonths;
+  final String? imageUrl;
   final DateTime? deletedAt;
 
   bool get isDeleted => deletedAt != null;
@@ -45,6 +47,8 @@ class Product {
     String? region,
     int? durationMonths,
     bool clearDuration = false,
+    String? imageUrl,
+    bool clearImage = false,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
   }) {
@@ -64,6 +68,7 @@ class Product {
       durationMonths: clearDuration
           ? null
           : (durationMonths ?? this.durationMonths),
+      imageUrl: clearImage ? null : (imageUrl ?? this.imageUrl),
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     );
   }
@@ -80,6 +85,7 @@ class Product {
     'categoryIds': List<int>.of(categoryIds),
     'region': region,
     'durationMonths': durationMonths,
+    'imageUrl': imageUrl,
     'deletedAt': deletedAt?.toIso8601String(),
   };
 
@@ -105,6 +111,7 @@ class Product {
       categoryIds: readIds(json['categoryIds']),
       region: readString(json['region']),
       durationMonths: readNullableInt(json['durationMonths']),
+      imageUrl: json['imageUrl'] == null ? null : readString(json['imageUrl']),
       deletedAt: readDate(json['deletedAt']),
     );
   }

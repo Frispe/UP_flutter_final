@@ -5,6 +5,9 @@ import 'screens/login.dart';
 import 'screens/register.dart';
 import 'screens/accounts.dart';
 import 'screens/statistics.dart';
+import 'screens/home.dart';
+import 'screens/customer_catalog.dart';
+import 'screens/profile.dart';
 import 'state/auth_state.dart';
 
 import 'screens/user_detail.dart';
@@ -34,13 +37,25 @@ import 'widgets/list_route.dart';
 GoRouter createRouter(AuthState auth) => GoRouter(
   refreshListenable: auth,
   redirect: (context, state) {
-    final authPage = state.uri.path == '/login' || state.uri.path == '/register';
+    final authPage =
+        state.uri.path == '/login' || state.uri.path == '/register';
     if (!auth.signedIn && !authPage) {
-      return Uri(path: '/login', queryParameters: {'from': state.uri.toString()}).toString();
+      return Uri(
+        path: '/login',
+        queryParameters: {'from': state.uri.toString()},
+      ).toString();
     }
     if (auth.signedIn && authPage) {
       final from = state.uri.queryParameters['from'];
-      return from != null && from.startsWith('/') ? from : '/products';
+      return from != null && from.startsWith('/')
+          ? from
+          : (auth.role == 'customer' ? '/home' : '/products');
+    }
+    if (auth.role == 'customer' && state.uri.path == '/products') {
+      return '/catalog';
+    }
+    if (auth.role == 'customer' && state.uri.path == '/orders') {
+      return '/profile';
     }
     if (auth.signedIn && !AccessRules.canOpen(auth.role, state.uri.path)) {
       return '/products';
@@ -49,17 +64,39 @@ GoRouter createRouter(AuthState auth) => GoRouter(
   },
   routes: [
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-    GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
-    GoRoute(path: '/accounts', builder: (context, state) => const AccountsScreen()),
-    GoRoute(path: '/statistics', builder: (context, state) => const StatisticsScreen()),
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/accounts',
+      builder: (context, state) => const AccountsScreen(),
+    ),
+    GoRoute(
+      path: '/statistics',
+      builder: (context, state) => const StatisticsScreen(),
+    ),
+    GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+    GoRoute(
+      path: '/catalog',
+      builder: (context, state) => const CustomerCatalog(),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
+    ),
     GoRoute(
       path: '/cart',
       builder: (context, state) {
         final customerId = auth.customerId;
         if (customerId == null) return const NotFound(location: '/cart');
         return ChangeNotifierProvider<CartState>(
-          create: (context) => CartState(context.read<CartRepository>())..load(customerId),
-          child: UserDetail(key: ValueKey('own-cart-$customerId'), id: customerId),
+          create: (context) =>
+              CartState(context.read<CartRepository>())..load(customerId),
+          child: UserDetail(
+            key: ValueKey('own-cart-$customerId'),
+            id: customerId,
+          ),
         );
       },
     ),
@@ -159,7 +196,11 @@ GoRouter createRouter(AuthState auth) => GoRouter(
         ),
     ],
 
-    GoRoute(path: '/', redirect: (context, state) => '/products'),
+    GoRoute(
+      path: '/',
+      redirect: (context, state) =>
+          auth.role == 'customer' ? '/home' : '/products',
+    ),
     GoRoute(
       path: '/products',
       builder: (context, state) => ListRoute(uri: state.uri, brands: false),
